@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Glow Up">
+<meta name="theme-color" content="#0b0b0b">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Glute, Core &amp; Back Tracker · to 16 April</title>
+<style>
+:root{
+  --bg:#0b0b0b;--card:#161514;--ink:#f2ecdf;--muted:#968d7f;--line:#2b2823;
+  --accent:#d4af37;--accent-soft:#262012;--gold-hi:#f1d27a;--done:#d4af37;--done-soft:#1f1a0c;--miss:#9e4a42;--miss-soft:#221614;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:760px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(70px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
+html{-webkit-text-size-adjust:100%}
+body{-webkit-tap-highlight-color:transparent}
+button,a,input{touch-action:manipulation}
+.kg{font-size:16px!important}
+.mark,.tab,.how{min-height:38px}
+.banner{position:relative;border-radius:16px;padding:14px 16px;margin:0 0 14px;color:#111;background:linear-gradient(120deg,#a8841f,#d4af37 45%,#f1d27a 80%,#c99a2e);overflow:hidden;min-height:68px;display:flex;align-items:center;gap:12px;box-shadow:0 6px 22px rgba(212,175,55,.18)}
+.banner .msg{font-weight:650;font-size:15.5px;line-height:1.3;transition:opacity .45s,transform .45s}
+.banner .msg.out{opacity:0;transform:translateY(6px)}
+.banner .dots{position:absolute;right:12px;bottom:8px;display:flex;gap:4px}
+.banner .dots i{width:5px;height:5px;border-radius:50%;background:rgba(0,0,0,.25)}
+.banner .dots i.on{background:#111}
+.banner.cardio{background:linear-gradient(120deg,#141414,#221d10);color:var(--gold-hi);border:1px solid #6b5520}
+.banner.cardio .dots i,.banner.upper .dots i,.banner.rest .dots i{background:rgba(212,175,55,.3)}
+.banner.cardio .dots i.on,.banner.upper .dots i.on,.banner.rest .dots i.on{background:var(--accent)}
+.banner.upper{background:linear-gradient(120deg,#000,#1b1b1b);color:var(--accent);border:1px solid var(--accent)}
+.banner.rest{background:#141312;color:var(--muted);border:1px solid var(--line)}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(-6deg)}}
+.install{background:var(--card);border:1px dashed #5a4a1e;border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:13.5px;position:relative}
+.install b{display:block;margin-bottom:4px}
+.install ol{margin:6px 0 0 18px;padding:0}
+.install button{position:absolute;top:8px;right:8px;border:0;background:none;font-size:18px;color:var(--muted);cursor:pointer;width:32px;height:32px}
+.save{bottom:calc(14px + env(safe-area-inset-bottom))!important}
+h1{font-size:20px;margin:4px 0 2px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.weekbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.weekbar button{border:1px solid var(--line);background:var(--card);border-radius:10px;width:40px;height:40px;font-size:18px;cursor:pointer;color:var(--ink)}
+.weekbar button:disabled{opacity:.35;cursor:default}
+.weektitle{flex:1;text-align:center}
+.weektitle b{font-size:18px;display:block}
+.weektitle span{font-size:12px;color:var(--muted)}
+.phase{background:var(--accent-soft);border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:12px}
+.phase b{color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-bottom:6px}
+.grid button{border:0;border-radius:6px;height:30px;font-size:11px;cursor:pointer;color:var(--ink);background:#ece6e0;position:relative;overflow:hidden;padding:0}
+.grid button .fill{position:absolute;left:0;bottom:0;width:100%;background:#9cc9ab}
+.grid button span{position:relative}
+.grid button.cur{outline:2px solid var(--accent);outline-offset:1px}
+.plan{height:6px;background:#24211c;border-radius:99px;overflow:hidden;margin:0 0 14px}.planfill{height:100%;background:linear-gradient(90deg,#a8841f,#f1d27a);border-radius:99px}
+.legend{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+.stats{display:flex;gap:8px;margin-bottom:12px}
+.stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.stat b{font-size:18px;display:block}
+.stat span{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.tab{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 12px;font-size:13.5px;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:6px}
+.tab.on{background:var(--accent);color:#111;border-color:var(--accent);font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:#3a3630}
+.dot.full{background:var(--done)}.dot.part{background:#8a7232}
+.dayhead h2{font-size:18px;margin:0}
+.dayhead p{margin:2px 0 12px;color:var(--muted);font-size:13px}
+.group{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:16px 0 6px}
+.ex{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:8px;transition:background .15s}
+.ex.done{background:var(--done-soft);border-color:#5e4d1c}
+.ex.miss{background:var(--miss-soft);border-color:#4a2a26}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.name{font-weight:600}
+.rx{font-size:13.5px;color:var(--accent);font-weight:600;white-space:nowrap}
+.note{font-size:13px;color:var(--muted);margin:3px 0 8px}
+.row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.how{font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--accent-soft);background:var(--accent-soft);border-radius:8px;padding:5px 9px}
+.kg{width:78px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:#0f0f0f;color:var(--ink)}
+.sp{flex:1}
+.mark{border:1px solid var(--line);background:#0f0f0f;border-radius:8px;padding:6px 10px;font-size:13.5px;cursor:pointer;color:var(--ink)}
+.mark.d.on{background:var(--done);border-color:var(--done);color:#111;font-weight:600}
+.mark.m.on{background:var(--miss);border-color:var(--miss);color:#fff}
+.dayact{display:flex;gap:8px;margin:12px 0}
+.dayact button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px;font-size:13.5px;cursor:pointer;color:var(--ink)}
+.save{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:var(--accent);color:#111;font-size:12.5px;padding:6px 12px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none}
+.save.show{opacity:.9}
+.foot{font-size:12px;color:var(--muted);margin-top:18px}
+.backup{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:10px;font-size:13.5px}
+.backup p{margin:2px 0 8px;color:var(--muted)}
+.brow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.backup button,.bkfile{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px;font-size:13.5px;cursor:pointer;color:var(--ink);min-height:38px;display:inline-flex;align-items:center}
+.bkfile input{display:none}
+.backup textarea{width:100%;min-height:60px;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:16px;margin-bottom:6px;font-family:inherit}
+.count{display:flex;align-items:baseline;gap:8px;margin:2px 0 16px}
+.count b{font-size:34px;color:var(--accent);letter-spacing:-.01em;line-height:1}
+.count span{color:var(--muted);font-size:14px}
+.wrow{width:100%;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer;text-align:left;color:var(--ink);font:inherit}
+.wrow .dn{font-weight:700;width:34px}
+.wrow .dt{flex:1;font-size:13.5px}
+.wrow .st{font-size:12px;font-weight:600;padding:3px 8px;border-radius:99px;background:#22201c;color:var(--muted);white-space:nowrap}
+.wrow .st.full{background:var(--done-soft);color:var(--done)}
+.wrow .st.part{background:#2a2414;color:var(--gold-hi)}
+.wrow .st.miss{background:var(--miss-soft);color:var(--miss)}
+.wrow.today{border-color:var(--accent)}
+.go{width:100%;margin:10px 0 4px;border:0;background:linear-gradient(120deg,#b8922a,#d4af37 50%,#f1d27a);color:#111;border-radius:12px;padding:14px;font-size:15.5px;font-weight:650;cursor:pointer}
+.wtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.wtop button{border:0;background:none;color:var(--accent);font-size:15px;font-weight:600;cursor:pointer;padding:6px 0;min-height:38px}
+.wtop span{font-size:12.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <section id="home">
+  <h1>Glute, Core &amp; Back Plan</h1>
+  <div class="count"><b id="countdown"></b><span>to 16 April</span></div>
+
+  <div class="install" id="install" hidden>
+    <button id="instX" aria-label="Dismiss">×</button>
+    <b>Put this on your Home Screen</b>
+    In Safari: tap <b style="display:inline">Share</b> (square with arrow) → <b style="display:inline">Add to Home Screen</b> → Add. Then it opens like an app.
+  </div>
+
+  <div class="weekbar">
+    <button id="prev" aria-label="Previous week">‹</button>
+    <div class="weektitle"><b id="wk"></b><span id="wkdates"></span></div>
+    <button id="next" aria-label="Next week">›</button>
+  </div>
+  <div class="plan"><div class="planfill" id="planfill"></div></div>
+  <div class="phase" id="phase"></div>
+  <div class="stats">
+    <div class="stat"><b id="sDone">0</b><span>done</span></div>
+    <div class="stat"><b id="sMiss">0</b><span>missed</span></div>
+    <div class="stat"><b id="sPct">0%</b><span>completed</span></div>
+  </div>
+  <div class="group">This week</div>
+  <div id="weeklist"></div>
+  <button class="go" id="goToday">Start today's workout</button>
+  <p class="foot">Progress saves on this phone. Always open it from the Home Screen icon.</p>
+ </section>
+
+ <section id="workout" hidden>
+  <div class="wtop"><button id="back">‹ Overview</button><span id="wkmini"></span></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="banner" id="banner"><span class="msg" id="bMsg"></span><span class="dots" id="bDots"></span></div>
+  <div id="day"></div>
+ </section>
+</div>
+<div class="save" id="save">Saved</div>
+
+<script>
+const yt = q => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q + " proper form tutorial");
+
+const TOTAL = 23;
+const START = new Date(2026, 10, 9); // Mon 9 Nov 2026
+const GOAL = new Date(2027, 3, 16);  // Fri 16 Apr 2027
+const PHASES = {
+  found:{name:"Foundation",text:"<b>Foundation.</b> Sets and reps as written. Learn the form, find working weights and stop 2–3 reps short of failure. Cardio at the low end of each time range."},
+  deload:{name:"Deload",text:"<b>Deload week.</b> Same exercises, half the sets, about 70% of your usual weight. Cardio halved too. This is where the body catches up, so don't skip it."},
+  xmas:{name:"Christmas deload",text:"<b>Christmas week.</b> Deload: half the sets, ~70% weight. Aim for 2–3 sessions, whichever days work, and keep walking. Enjoy Christmas Day; get back to normal eating the day after."},
+  build:{name:"Build",text:"<b>Build.</b> One extra set on the key lifts (shown). Stop 1–2 reps short of failure. Cardio at the top of each range, Wednesday circuit goes to 4 rounds, rower finisher becomes 1 min hard / 1 min easy."},
+  push:{name:"Push",text:"<b>Push.</b> Heaviest weights so far on the first exercise each day. Hip thrust and squat aim for 5–8 reps. End of week 16: photos, measurements and record your best lifts."},
+  build2:{name:"Block 2 build",text:"<b>Block 2.</b> Some accessories are swapped for new ones (shown) to keep progress coming. Start the new ones moderate and build up. Extra set on the key lifts stays."},
+  peak:{name:"Final weeks",text:"<b>Final two weeks.</b> Keep lifting at your current weights, no new records needed. Final week: drop one set from every exercise so she feels fresh, not sore. Keep steps and eating steady: no crash dieting or water cutting before the 16th."}
+};
+const phaseOf = w => w<=4?"found": w<=6?"build": w===7?"xmas": w<=11?"build": w===12?"deload": w<=16?"push": w===17?"deload": w<=21?"build2":"peak";
+const weekStart = w => new Date(START.getFullYear(), START.getMonth(), START.getDate() + (w-1)*7);
+const fmt = d => d.toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+function currentWeek(){
+  const now = new Date(); const t = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const w = Math.floor((t - START)/(7*864e5)) + 1;
+  return Math.min(TOTAL, Math.max(1, w));
+}
+function daysLeft(){
+  const now = new Date(); const t = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((GOAL - t)/864e5);
+}
+
+// type: lift (sets x reps) | text (prescription string)
+const DAYS = [
+ {id:"mon",tab:"Mon",title:"Lower A: heavy glutes",sub:"Rest 2–3 min on the first two lifts, 60–90 sec on the rest.",groups:[
+  {label:"Warm-up",items:[{id:"wu",n:"Warm-up",rx:"5–8 min",note:"5 min bike or incline walk, 2 sets glute bridges + band walks",q:"glute activation warm up"}]},
+  {label:"Main",items:[
+   {id:"ht",n:"Barbell hip thrust",s:4,r:"6–10",pr:"5–8",plus:1,note:"1-sec squeeze at top, chin tucked, ribs down",q:"barbell hip thrust",kg:1},
+   {id:"rdl",n:"Romanian deadlift",s:3,r:"8–10",plus:1,note:"Hips back, soft knees, bar close to legs",q:"romanian deadlift",kg:1},
+   {id:"bss",n:"Bulgarian split squat",s:3,r:"8–12 each",note:"Lean torso slightly forward to bias glutes",q:"bulgarian split squat glute focus",kg:1,alt:{n:"Dumbbell walking lunge",note:"Long strides, slight forward lean, drive through front heel",q:"dumbbell walking lunge glutes"}},
+   {id:"bext",n:"45° back extension",s:3,r:"12–15",note:"Round upper back slightly, squeeze glutes to rise",q:"45 degree back extension glute focus",kg:1},
+   {id:"abd",n:"Seated hip abduction",s:2,r:"15–20",note:"Lean forward. Moderate weight only",q:"seated hip abduction machine",kg:1},
+   {id:"db",n:"Dead bug",s:3,r:"8 each side",note:"Lower back pressed into the floor",q:"dead bug exercise"}]},
+  {label:"Finisher",items:[{id:"fin",n:"Incline treadmill walk",rx:"10–15 min",note:"10–12% incline, brisk, no holding the rails",q:"incline treadmill walk"}]}
+ ]},
+ {id:"tue",tab:"Tue",title:"Rest",rest:1,sub:"No gym today. Recovery day.",groups:[
+  {label:"Optional",items:[{id:"walk",n:"Walk",rx:"Easy, any length",note:"Aim for 8,000–10,000 steps",q:"benefits of walking for fat loss"}]}
+ ]},
+ {id:"wed",tab:"Wed",title:"Full body conditioning: machines + kettlebells",sub:"Part 1 strength (~20 min), Part 2 circuit (~20 min).",groups:[
+  {label:"Part 1: machines",items:[
+   {id:"htm",n:"Hip thrust machine",s:3,r:"10–12",note:"Second glute hit of the week",q:"hip thrust machine",kg:1},
+   {id:"lp",n:"Leg press, feet high and wide",s:3,r:"10–12",note:"Higher feet shift work to glutes",q:"leg press glute focus feet high",kg:1},
+   {id:"apu",n:"Assisted pull-up machine",s:3,r:"6–8",note:"Goal: one unassisted pull-up",q:"assisted pull up machine",kg:1},
+   {id:"mrow",n:"Seated machine row",s:3,r:"10–12",note:"Squeeze shoulder blades together",q:"seated machine row",kg:1}]},
+  {label:"Part 2: kettlebell circuit",circuit:1,items:[
+   {id:"sw",n:"Kettlebell swing",rx:"15 reps",note:"Hip snap, not a squat or front raise",q:"kettlebell swing",kg:1},
+   {id:"gs",n:"Goblet squat",rx:"10 reps",note:"Elbows inside knees, chest up",q:"kettlebell goblet squat",kg:1},
+   {id:"kbl",n:"Kettlebell reverse lunge",rx:"8 each",note:"Bell held at chest",q:"kettlebell reverse lunge goblet",kg:1},
+   {id:"sc",n:"Suitcase carry",rx:"30 m each side",note:"Don't lean; trains obliques without bulking the waist",q:"kettlebell suitcase carry",kg:1},
+   {id:"mc",n:"Mountain climbers",rx:"30 sec",note:"Hips level with shoulders",q:"mountain climbers"}]},
+  {label:"Core",items:[
+   {id:"aw",n:"Ab wheel rollout (knees)",s:3,r:"6–10",note:"Stop before the lower back sags",q:"ab wheel rollout from knees"},
+   {id:"sp",n:"Side plank",s:2,r:"20–30 sec each",note:"Hips high, straight line",q:"side plank"}]}
+ ]},
+ {id:"thu",tab:"Thu",title:"Cardio day",sub:"Steady pace: she can talk in short sentences. No sprints, Friday is a leg day.",groups:[
+  {label:"Cardio",items:[{id:"c1",n:"Stair climber, incline walk or cross-trainer",rx:"30–45 min",note:"Steady, moderate effort. Swap machines halfway if it gets boring",q:"stairmaster workout beginner"}]}
+ ]},
+ {id:"fri",tab:"Fri",title:"Lower B: glute volume",sub:"Rest 2 min on the first two, 60–90 sec on the rest.",groups:[
+  {label:"Warm-up",items:[{id:"wu",n:"Warm-up",rx:"5–8 min",note:"5 min bike, 2 sets glute bridges + band walks",q:"glute activation warm up"}]},
+  {label:"Main",items:[
+   {id:"sq",n:"Smith machine or goblet squat",s:3,r:"8–12",pr:"6–8",note:"Feet slightly wide, sit back and down",q:"smith machine squat glutes",kg:1},
+   {id:"dht",n:"Dumbbell hip thrust or glute bridge",s:3,r:"12–15",note:"Lighter, higher reps than Monday",q:"dumbbell hip thrust",kg:1},
+   {id:"rl",n:"Reverse lunge (deficit if able)",s:3,r:"10 each",note:"Step back long, drive through the front heel",q:"deficit reverse lunge",kg:1,alt:{n:"Dumbbell step-up",note:"Box at knee height, push through the heel, control the way down",q:"dumbbell step up glutes"}},
+   {id:"ck",n:"Cable glute kickback",s:3,r:"12–15 each",note:"Kick back and slightly out, no lower-back arch",q:"cable glute kickback",kg:1,alt:{n:"Single-leg hip thrust",note:"Shoulders on bench, one foot down, squeeze at the top",q:"single leg hip thrust"}},
+   {id:"hc",n:"Lying hamstring curl",s:2,r:"10–12",note:"Control the lowering",q:"lying hamstring curl machine",kg:1},
+   {id:"pl",n:"Plank",s:3,r:"30–45 sec",note:"Squeeze glutes, brace like taking a punch",q:"plank proper form"}]},
+  {label:"Finisher",items:[{id:"fin",n:"Bike intervals",rx:"8 min",note:"8 rounds: 20 sec hard / 40 sec easy",q:"bike sprint intervals"}]}
+ ]},
+ {id:"sat",tab:"Sat",title:"Upper: back + core",sub:"Rest 2 min on the first two, 60–90 sec on the rest.",groups:[
+  {label:"Main",items:[
+   {id:"pd",n:"Lat pulldown",s:4,r:"8–12",pr:"6–8",plus:1,note:"Pull elbows down to ribs",q:"lat pulldown",kg:1},
+   {id:"csr",n:"Chest-supported row",s:3,r:"8–12",plus:1,note:"Squeeze shoulder blades, pause 1 sec",q:"chest supported row",kg:1},
+   {id:"sar",n:"Single-arm dumbbell row",s:3,r:"10–12 each",note:"Elbow travels towards the hip",q:"single arm dumbbell row",kg:1,alt:{n:"Single-arm cable row",note:"Reach forward, pull elbow to hip",q:"single arm seated cable row"}},
+   {id:"sap",n:"Straight-arm cable pulldown",s:3,r:"12–15",note:"Lats only, arms nearly straight",q:"straight arm cable pulldown",kg:1},
+   {id:"fp",n:"Face pull",s:3,r:"15",note:"Rear delts and posture",q:"cable face pull",kg:1},
+   {id:"dbb",n:"Dumbbell bench press",s:2,r:"10–12",note:"Balances the pulling",q:"dumbbell bench press",kg:1},
+   {id:"pp",n:"Pallof press",s:3,r:"10 each side",note:"Resist the cable twisting you",q:"pallof press",kg:1},
+   {id:"hkr",n:"Hanging knee raise",s:3,r:"8–12",note:"Curl the pelvis up, no swinging",q:"hanging knee raise"}]},
+  {label:"Finisher",items:[{id:"fin",n:"Rower",rx:"10 min",note:"Legs, then lean back, then pull",q:"rowing machine technique"}]}
+ ]},
+ {id:"sun",tab:"Sun",title:"Rest",rest:1,sub:"Recovery day.",groups:[
+  {label:"Optional",items:[{id:"walk",n:"Walk",rx:"Easy, any length",note:"Aim for 8,000–10,000 steps",q:"benefits of walking for fat loss"}]}
+ ]}
+];
+
+function rxFor(it, w){
+  const ph = phaseOf(w);
+  if(it.rx){
+    if(ph==="deload") return it.rx + " (half)";
+    return it.rx;
+  }
+  let s = it.s, r = it.r;
+  if(ph==="deload"||ph==="xmas") s = Math.max(1, Math.ceil(s/2));
+  else if((ph==="build"||ph==="push"||ph==="build2") && it.plus) s += 1;
+  else if(ph==="peak" && w===TOTAL) s = Math.max(1, s-1);
+  if(ph==="push" && it.pr) r = it.pr;
+  return s + " × " + r;
+}
+const useAlt = (it,w) => it.alt && w>=17;
+const nameFor = (it,w) => useAlt(it,w) ? it.alt.n : it.n;
+const noteFor = (it,w) => useAlt(it,w) ? it.alt.note : (it.note||"");
+const qFor = (it,w) => useAlt(it,w) ? it.alt.q : it.q;
+function groupLabel(g, w){
+  if(!g.circuit) return g.label;
+  const ph = phaseOf(w);
+  const rounds = (ph==="deload"||ph==="xmas") ? 2 : (ph==="found" ? 3 : 4);
+  return g.label + " · " + rounds + " rounds, 90 sec rest between";
+}
+
+// ---------- state ----------
+const LS = "gcb-tracker-v1";
+let state = {week:1, marks:{}};
+try{ const raw = localStorage.getItem(LS); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){}
+state.week = currentWeek();
+let curDay = (() => { const d = new Date().getDay(); return ["sun","mon","tue","wed","thu","fri","sat"][d]; })();
+const key = (w,d,i) => w+"|"+d+"|"+i;
+
+let saveTimer = null;
+function persist(){
+  try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){}
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>flash("Saved"), 400);
+}
+function flash(t){ const s=document.getElementById("save"); s.textContent=t; s.classList.add("show"); clearTimeout(flash.t); flash.t=setTimeout(()=>s.classList.remove("show"),1200); }
+
+// ---------- stats ----------
+function dayItems(d){ return d.groups.flatMap(g=>g.items); }
+function dayCounts(w, d){
+  let done=0, miss=0, tot=0;
+  dayItems(d).forEach(it=>{ tot++; const m=state.marks[key(w,d.id,it.id)]; if(m&&m.s==="d")done++; else if(m&&m.s==="m")miss++; });
+  return {done,miss,tot};
+}
+function weekCounts(w){
+  let done=0, miss=0, tot=0;
+  DAYS.filter(d=>!d.rest).forEach(d=>{ const c=dayCounts(w,d); done+=c.done; miss+=c.miss; tot+=c.tot; });
+  return {done,miss,tot};
+}
+
+// ---------- render ----------
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+let view = "home";
+const todayId = () => ["sun","mon","tue","wed","thu","fri","sat"][new Date().getDay()];
+function render(){
+  const w = state.week, ph = phaseOf(w);
+  $("home").hidden = view!=="home"; $("workout").hidden = view!=="workout";
+  $("wk").textContent = "Week " + w + " of " + TOTAL;
+  $("wkdates").textContent = fmt(weekStart(w)) + " – " + fmt(new Date(weekStart(w).getTime()+6*864e5)) + " · " + PHASES[ph].name;
+  $("wkmini").textContent = "Week " + w + " · " + PHASES[ph].name;
+  $("prev").disabled = w<=1; $("next").disabled = w>=TOTAL;
+  const dl = daysLeft(); $("countdown").textContent = dl>0 ? dl+" days" : dl===0 ? "Today" : "Done";
+  $("phase").innerHTML = PHASES[ph].text;
+  $("planfill").style.width = Math.round(100*w/TOTAL) + "%";
+  const wc = weekCounts(w);
+  $("sDone").textContent = wc.done;
+  $("sMiss").textContent = wc.miss;
+  $("sPct").textContent = (wc.tot?Math.round(100*wc.done/wc.tot):0) + "%";
+  const isThisWeek = w===currentWeek();
+  $("weeklist").innerHTML = DAYS.map(d=>{
+    const c=dayCounts(w,d);
+    let st="Not started", cls="";
+    if(d.rest){ return `<button class="wrow" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">Rest${(isThisWeek && d.id===todayId())?" · today":""}</span><span class="st">Rest day</span></button>`; }
+    if(c.done===c.tot){st="Done";cls="full";}
+    else if(c.miss===c.tot){st="Missed";cls="miss";}
+    else if(c.done+c.miss>0){st=c.done+"/"+c.tot+" done";cls="part";}
+    const today = isThisWeek && d.id===todayId();
+    return `<button class="wrow ${today?"today":""}" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">${esc(d.title)}${today?" · today":""}</span><span class="st ${cls}">${st}</span></button>`;
+  }).join("");
+  if(view!=="workout"){ if(typeof stopBanner==="function") stopBanner(); return; }
+
+  $("tabs").innerHTML = DAYS.map(d=>{
+    const c=dayCounts(w,d), cls = c.done===c.tot?"full":(c.done+c.miss>0?"part":"");
+    return `<button class="tab ${d.id===curDay?"on":""}" data-d="${d.id}"><span class="dot ${cls}"></span>${d.tab}</button>`;
+  }).join("");
+
+  const d = DAYS.find(x=>x.id===curDay);
+  let h = `<div class="dayhead"><h2>${esc(d.tab)} · ${esc(d.title)}</h2><p>${esc(d.sub)}</p></div>`;
+  h += `<div class="dayact"><button data-all="d">Mark whole day done</button><button data-all="m">Missed this session</button><button data-all="x">Clear day</button></div>`;
+  d.groups.forEach(g=>{
+    h += `<div class="group">${esc(groupLabel(g,w))}</div>`;
+    g.items.forEach(it=>{
+      const k = key(w,d.id,it.id), m = state.marks[k]||{};
+      const cls = m.s==="d"?"done":m.s==="m"?"miss":"";
+      h += `<div class="ex ${cls}">
+        <div class="top"><div class="name">${esc(nameFor(it,w))}</div><div class="rx">${esc(rxFor(it,w))}</div></div>
+        <div class="note">${esc(noteFor(it,w))}</div>
+        <div class="row">
+          <a class="how" href="${yt(qFor(it,w))}" target="_blank" rel="noopener">▶ How to</a>
+          ${it.kg?`<input class="kg" inputmode="decimal" placeholder="kg" data-kg="${it.id}" value="${esc(m.kg||"")}">`:""}
+          <span class="sp"></span>
+          <button class="mark d ${m.s==="d"?"on":""}" data-mk="d" data-id="${it.id}">✓ Done</button>
+          <button class="mark m ${m.s==="m"?"on":""}" data-mk="m" data-id="${it.id}">✗ Missed</button>
+        </div></div>`;
+    });
+  });
+  $("day").innerHTML = h;
+  if(typeof resetBanner==="function") resetBanner();
+}
+
+function setMark(id, s){
+  const k = key(state.week, curDay, id);
+  const m = state.marks[k] || {};
+  m.s = (m.s===s) ? undefined : s;
+  if(!m.s && !m.kg) delete state.marks[k]; else state.marks[k] = m;
+}
+
+document.addEventListener("click", e=>{
+  const t = e.target.closest("button"); if(!t) return;
+  if(t.id==="prev" && state.week>1){ state.week--; persist(); render(); }
+  else if(t.id==="next" && state.week<TOTAL){ state.week++; persist(); render(); }
+  else if(t.dataset.d){ curDay=t.dataset.d; render(); }
+  else if(t.dataset.go){ curDay=t.dataset.go; view="workout"; render(); window.scrollTo(0,0); }
+  else if(t.id==="goToday"){ curDay=todayId(); view="workout"; render(); window.scrollTo(0,0); }
+  else if(t.id==="back"){ view="home"; render(); window.scrollTo(0,0); }
+  else if(t.dataset.mk){ setMark(t.dataset.id, t.dataset.mk); persist(); render(); }
+  else if(t.dataset.all){
+    const d = DAYS.find(x=>x.id===curDay);
+    dayItems(d).forEach(it=>{
+      const k = key(state.week,curDay,it.id), m = state.marks[k]||{};
+      if(t.dataset.all==="x"){ delete m.s; } else m.s = t.dataset.all;
+      if(!m.s && !m.kg) delete state.marks[k]; else state.marks[k]=m;
+    });
+    persist(); render();
+  }
+});
+document.addEventListener("input", e=>{
+  const id = e.target.dataset && e.target.dataset.kg; if(!id) return;
+  const k = key(state.week,curDay,id), m = state.marks[k]||{};
+  m.kg = e.target.value.trim();
+  if(!m.s && !m.kg) delete state.marks[k]; else state.marks[k]=m;
+  persist();
+});
+
+
+// ---------- motivational banners ----------
+const BANNERS = {
+  lower:{cls:"",msgs:[
+"Glute day. The bum won't build itself.",
+"Squeeze at the top like it owes you money.",
+"Every hip thrust is a deposit in the peach bank.",
+"Heavy today = proud in April.",
+"Form first, ego second, booty always.",
+"Your future jeans are watching. Make them proud."]},
+  cardio:{cls:"cardio",msgs:[
+"Cardio day: put your best playlist on and go.",
+"Steady wins. You don't have to be fast, just moving.",
+"Every step today is a step closer to April.",
+"Sweat now, glow later.",
+"Talk-pace is the sweet spot. No need to die out there."]},
+  cond:{cls:"cardio",msgs:[
+"Kettlebell day. Swing it like you mean it.",
+"Machines first, then the circuit. You've got this.",
+"Short rests, big energy, done in 40.",
+"Snap those hips. Swings are glute work in disguise.",
+"Halfway through the week already, look at you."]},
+  upper:{cls:"upper",msgs:[
+"Back day. Building that backless-dress back.",
+"Elbows to ribs. Feel it in the back, not the arms.",
+"Strong back, tall posture, main character energy.",
+"One step closer to that first unassisted pull-up.",
+"Last session of the week. Finish it strong."]},
+  rest:{cls:"rest",msgs:[
+"Rest day. Muscles grow when you recover.",
+"Walk, stretch, sleep, repeat.",
+"Recovery is part of the plan, not a break from it.",
+"Eat your protein, hydrate, chill."]}
+};
+const DAYKIND = {mon:"lower",tue:"rest",wed:"cond",thu:"cardio",fri:"lower",sat:"upper",sun:"rest"};
+function extraMsgs(){
+  const ph = phaseOf(state.week), dl = daysLeft(), out = [];
+  if(dl>0) out.push(dl +" days to go. Every session counts.");
+  if(ph==="deload") out.push("Deload week: lighter on purpose. Trust the process.");
+  if(ph==="xmas") out.push("Christmas week: 2–3 sessions and you've won. Enjoy it.");
+  if(ph==="push") out.push("Push phase: time to lift the heaviest yet.");
+  if(ph==="peak") out.push("Final stretch. Stay steady, it's nearly time.");
+  const c = dayCounts(state.week, DAYS.find(d=>d.id===curDay));
+  if(c.tot && c.done===c.tot) out.unshift("Session complete. Absolute legend.");
+  return out;
+}
+let bIdx = 0, bTimer = null, bKey ="";
+function bannerList(){
+  const b = BANNERS[DAYKIND[curDay]];
+  return {b, msgs: extraMsgs().concat(b.msgs)};
+}
+function showBanner(i, animate){
+  const {b, msgs} = bannerList();
+  const el = $("bMsg"); i = i % msgs.length; bIdx = i;
+  const apply = () => {
+    $("banner").className = "banner " + b.cls;
+    el.textContent = msgs[i];
+    $("bDots").innerHTML = msgs.map((_,j)=>`<i class="${j===i?"on":""}"></i>`).join("");
+    el.classList.remove("out");
+  };
+  if(animate){ el.classList.add("out"); setTimeout(apply, 420); } else apply();
+}
+function stopBanner(){ clearInterval(bTimer); }
+function resetBanner(){
+  const k = curDay +"|" + state.week;
+  if(k !== bKey){ bKey = k; bIdx = 0; }
+  showBanner(bIdx, false);
+  clearInterval(bTimer);
+  bTimer = setInterval(()=>showBanner(bIdx+1, true), 5000);
+}
+document.getElementById("banner").addEventListener("click", ()=>{ showBanner(bIdx+1, true); clearInterval(bTimer); bTimer=setInterval(()=>showBanner(bIdx+1,true),5000); });
+
+// ---------- Home Screen tip (iPhone/iPad Safari, not already installed) ----------
+(function(){
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+  const standalone = window.navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+  let dismissed = false; try{ dismissed = localStorage.getItem("gcb-install-x")==="1"; }catch(e){}
+  if(ios && !standalone && !dismissed) $("install").hidden = false;
+  $("instX").addEventListener("click", ()=>{ $("install").hidden = true; try{ localStorage.setItem("gcb-install-x","1"); }catch(e){} });
+})();
+
+render();
+
+
+</script>
+</body>
+</html>

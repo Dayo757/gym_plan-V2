@@ -197,6 +197,18 @@ h1{font-size:20px;margin:4px 0 2px}
 .feel span{font-size:12px;color:var(--muted);margin-right:2px}
 .feel button{flex:1;border:1px solid var(--line);background:#0f0f0f;color:var(--ink);border-radius:8px;padding:6px 4px;font-size:12.5px;cursor:pointer;min-height:34px}
 .feel button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.yentry{width:100%;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--accent);border-radius:14px;padding:14px;margin-bottom:8px;cursor:pointer;color:var(--ink);font:inherit;text-align:left}
+.yentry span{flex:1;display:flex;flex-direction:column}
+.yentry b{font-size:15.5px}
+.yentry small{color:var(--muted);font-size:12.5px;margin-top:3px}
+.yentry i{font-style:normal;color:var(--accent);font-size:22px}
+.yentry.done{border-color:var(--green-line);background:var(--green-soft)}
+.ytop{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.ytop button{border:0;background:none;color:var(--accent);font-size:15px;font-weight:600;cursor:pointer;padding:6px 0;min-height:38px}
+.ytop #yAll{font-size:13px;font-weight:500;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--ink)}
+.ytitle{font-size:20px;margin:4px 0 2px}
+.ysub{color:var(--muted);font-size:13px;margin:0 0 12px}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -633,13 +645,34 @@ function render(){
     ? `<div class="pnote"><b>Skipped: period</b><span>Doesn't count against your week.</span><button data-period="off">Undo</button></div>`
     : `<button class="pbtn" data-period="on">Skipped due to period</button>`;
   h += `<div class="dayact"><button data-all="d">Mark whole day done</button><button data-all="m">Missed this session</button><button data-all="x">Clear day</button></div>`;
+  if(yogaView){
+    const y = yogaPage(d, w);
+    if(y){ $("tabs").hidden = true; $("banner").hidden = true; $("day").innerHTML = y; return; }
+    yogaView = false;
+  }
+  $("tabs").hidden = false; $("banner").hidden = false;
   d.groups.forEach(g=>{
+    if(isYogaGroup(g)){
+      const vis = g.items.filter(x=>showItem(x,w,d.id));
+      const dn = vis.filter(x=>{ const m=state.marks[key(w,d.id,x.id)]; return m && m.s==="d"; }).length;
+      const parts = g.label.split("·").map(x=>x.trim());
+      h += `<div class="group">Yoga</div><button class="yentry ${dn===vis.length?"done":""}" data-yoga="1"><span><b>${esc(parts[0])}</b><small>${esc(parts.slice(1).join(" · "))} · ${dn}/${vis.length} poses done</small></span><i>›</i></button>`;
+      return;
+    }
     h += `<div class="group">${esc(groupLabel(g,w))}</div>`;
     const vis = g.items.filter(x=>showItem(x,w,d.id)); if(!vis.length) return;
     vis.map(x=>variantItem(x,w,d.id)).forEach(it=>{
+      h += cardHTML(it, w, d);
+    });
+  });
+  $("day").innerHTML = h;
+  if(typeof resetBanner==="function") resetBanner();
+}
+
+function cardHTML(it, w, d){
       const k = key(w,d.id,it.id), m = state.marks[k]||{};
       const cls = m.s==="d"?"done":m.s==="m"?"miss":m.s==="p"?"partial":"";
-      h += `<div class="ex ${cls}">
+      return `<div class="ex ${cls}">
         <div class="top"><div class="name">${esc(nameFor(it,w))}${it.main?' <span class="mtag">Main lift</span>':""}${it.ss?' <span class="sstag">Between sets</span>':""}</div><div class="rx">${esc(rxFor(it,w))}</div></div>
         <div class="note">${esc(noteFor(it,w))}</div>
         ${failLabel(it,w)}
@@ -656,12 +689,18 @@ function render(){
         </div>
         ${m.s==="p" ? partialUI(it, w, m) : ""}
         </div>`;
-    });
-  });
-  $("day").innerHTML = h;
-  if(typeof resetBanner==="function") resetBanner();
 }
-
+const isYogaGroup = g => /yoga/i.test(g.label);
+var yogaView = false;
+function yogaPage(d, w){
+  const g = d.groups.find(isYogaGroup); if(!g) return null;
+  const vis = g.items.filter(x=>showItem(x,w,d.id)).map(x=>variantItem(x,w,d.id));
+  const parts = g.label.split("·").map(x=>x.trim());
+  let y = `<div class="ytop"><button id="yBack">‹ Back to ${esc(d.tab)}</button><button id="yAll">Mark all done</button></div>
+    <h2 class="ytitle">${esc(parts[0])}</h2><p class="ysub">${esc(parts.slice(1).join(" · "))}</p>`;
+  vis.forEach(it=>{ y += cardHTML(it, w, d); });
+  return y;
+}
 function setMark(id, s){
   const k = key(state.week, curDay, id);
   const m = state.marks[k] || {};
@@ -679,12 +718,17 @@ document.addEventListener("click", e=>{
   else if(t.id==="ciOpen"){ ciForceOpen=true; renderCheckin(); }
   else if(t.closest && t.id==="goCheckin"){ view="checkin"; render(); window.scrollTo(0,0); }
   else if(t.id==="ciBack"){ view="home"; ciForceOpen=false; render(); window.scrollTo(0,0); }
-  else if(t.dataset.d){ curDay=t.dataset.d; render(); }
-  else if(t.dataset.go){ curDay=t.dataset.go; view="workout"; render(); window.scrollTo(0,0); }
+  else if(t.dataset.d){ curDay=t.dataset.d; yogaView=false; render(); }
+  else if(t.dataset.go){ curDay=t.dataset.go; yogaView=false; view="workout"; render(); window.scrollTo(0,0); }
   else if(t.id==="goToday"){ curDay=todayId(); view="workout"; render(); window.scrollTo(0,0); }
-  else if(t.id==="back"){ view="home"; render(); window.scrollTo(0,0); }
+  else if(t.id==="back"){ view="home"; yogaView=false; render(); window.scrollTo(0,0); }
   else if(t.dataset.ps){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.ps = (m.ps===+t.dataset.ps) ? undefined : +t.dataset.ps; state.marks[k]=m; persist(); render(); }
   else if(t.dataset.period){ const k=state.week+"|"+curDay; if(t.dataset.period==="on") state.flags[k]="period"; else delete state.flags[k]; persist(); render(); }
+  else if(t.dataset.yoga){ yogaView = true; render(); window.scrollTo(0,0); }
+  else if(t.id==="yBack"){ yogaView = false; render(); window.scrollTo(0,0); }
+  else if(t.id==="yAll"){ const was=isDayDone(); const d=dayDef(state.week,curDay), g=d.groups.find(isYogaGroup);
+    g.items.filter(x=>showItem(x,state.week,curDay)).forEach(it=>{ const k=key(state.week,curDay,it.id), m=state.marks[k]||{}; m.s="d"; state.marks[k]=m; });
+    persist(); render(); if(!was && isDayDone()) celebrate(); }
   else if(t.dataset.feel){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.feel = (m.feel===t.dataset.feel) ? undefined : t.dataset.feel; if(!m.n) m.n=t.dataset.n; state.marks[k]=m; persist(); render(); }
   else if(t.dataset.use){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.kg=t.dataset.use; m.n=t.dataset.n; state.marks[k]=m; persist(); render(); }
   else if(t.dataset.mk){ const was=isDayDone(); setMark(t.dataset.id, t.dataset.mk); persist(); render(); if(!was && isDayDone()) celebrate(); }

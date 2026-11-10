@@ -233,7 +233,17 @@ const DAYS = [
    {id:"db",n:"Dead bug",s:3,r:"8 each side",note:"Lower back pressed into the floor",q:"dead bug exercise"}]},
   {label:"Finisher · end cardio",items:[{id:"fin",n:"Step machine",rx:"10–15 min",keep:1,note:"Steady pace, stand tall, no leaning on the rails",q:"stairmaster proper form"}]}
  ]},
- {id:"tue",tab:"Tue",title:"Rest",rest:1,sub:"No gym today. Recovery day.",groups:[
+ {id:"tue",tab:"Tue",title:"Rest + yoga",rest:1,sub:"No gym today. About 15 min of yoga for hips, glutes and hamstrings after Monday's leg day.",groups:[
+  {label:"Yoga · hips & hamstrings · ~15 min",items:[
+   {id:"y1",n:"Cat-cow",rx:"1 min",keep:1,note:"Slow, move with your breath",q:"cat cow yoga"},
+   {id:"y2",n:"Child's pose",rx:"1 min",keep:1,note:"Knees wide, arms long, sink the hips back",q:"child's pose yoga"},
+   {id:"y3",n:"Low lunge",rx:"45 sec each side",keep:1,note:"Back knee down, hips forward, feel the front of the hip open",q:"low lunge anjaneyasana"},
+   {id:"y4",n:"Half splits",rx:"45 sec each side",keep:1,note:"Front leg straight, hinge forward with a flat back",q:"half splits yoga ardha hanumanasana"},
+   {id:"y5",n:"Pigeon pose",rx:"1 min each side",keep:1,note:"Deep glute stretch. Use a block under the hip if it's tight",q:"pigeon pose yoga beginners"},
+   {id:"y6",n:"Reclined figure-4",rx:"1 min each side",keep:1,note:"On your back, ankle over knee, pull the leg in",q:"reclined figure four stretch"},
+   {id:"y7",n:"Happy baby",rx:"1 min",keep:1,note:"Hold the feet, rock gently side to side",q:"happy baby yoga pose"},
+   {id:"y8",n:"Supine twist",rx:"45 sec each side",keep:1,note:"Knees to one side, look the other way",q:"supine spinal twist yoga"},
+   {id:"y9",n:"Legs up the wall",rx:"2 min",keep:1,note:"Just breathe. Helps tired legs recover",q:"legs up the wall yoga"}]},
   {label:"Optional",items:[{id:"walk",n:"Walk",rx:"Easy, any length",note:"Aim for 8,000–10,000 steps",q:"benefits of walking for fat loss"}]}
  ]},
  {id:"wed",tab:"Wed",title:"Full body conditioning: machines + kettlebells",sub:"Part 1 strength (~20 min), Part 2 circuit (~20 min).",groups:[
@@ -281,7 +291,17 @@ const DAYS = [
    {id:"hkr",n:"Hanging knee raise",s:3,r:"8–12",note:"Curl the pelvis up, no swinging",q:"hanging knee raise"}]},
   {label:"Finisher · end cardio",items:[{id:"fin",n:"1000 m row + step machine 5 min",rx:"1000 m + 5 min",keep:1,note:"Row hard but controlled: legs, lean back, then pull. Note your time and try to beat it each week",q:"rowing machine technique"}]}
  ]},
- {id:"sun",tab:"Sun",title:"Rest",rest:1,sub:"Recovery day.",groups:[
+ {id:"sun",tab:"Sun",title:"Rest + yoga",rest:1,sub:"Recovery day. About 15 min of yoga for the back, shoulders and a full reset before the new week.",groups:[
+  {label:"Yoga · back, shoulders & reset · ~15 min",items:[
+   {id:"y1",n:"Cat-cow",rx:"1 min",keep:1,note:"Slow, move with your breath",q:"cat cow yoga"},
+   {id:"y2",n:"Thread the needle",rx:"45 sec each side",keep:1,note:"Opens the upper back and shoulders after back day",q:"thread the needle yoga"},
+   {id:"y3",n:"Downward dog",rx:"1 min",keep:1,note:"Pedal the feet, long spine, soft knees are fine",q:"downward dog beginners"},
+   {id:"y4",n:"Puppy pose",rx:"1 min",keep:1,note:"Hips over knees, chest melts towards the floor",q:"puppy pose yoga"},
+   {id:"y5",n:"Sphinx pose",rx:"1 min",keep:1,note:"On forearms, gentle backbend, shoulders down",q:"sphinx pose yoga"},
+   {id:"y6",n:"Low lunge with side reach",rx:"45 sec each side",keep:1,note:"Reach the arm up and over to stretch the side body",q:"low lunge side bend yoga"},
+   {id:"y7",n:"Seated forward fold",rx:"1 min",keep:1,note:"Bend the knees as much as you need",q:"seated forward fold yoga"},
+   {id:"y8",n:"Reclined butterfly",rx:"1 min",keep:1,note:"Soles together, knees open, hand on belly",q:"reclined butterfly pose yoga"},
+   {id:"y9",n:"Savasana",rx:"3 min",keep:1,note:"Lie still, eyes closed. Done for the week",q:"savasana yoga"}]},
   {label:"Optional",items:[{id:"walk",n:"Walk",rx:"Easy, any length",note:"Aim for 8,000–10,000 steps",q:"benefits of walking for fat loss"}]}
  ]}
 ];
@@ -366,7 +386,7 @@ function render(){
   $("weeklist").innerHTML = DAYS.map(d=>{
     const c=dayCounts(w,d);
     let st="Not started", cls="";
-    if(d.rest){ return `<button class="wrow" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">Rest${(isThisWeek && d.id===todayId())?" · today":""}</span><span class="st">Rest day</span></button>`; }
+    if(d.rest){ return `<button class="wrow" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">Rest + yoga${(isThisWeek && d.id===todayId())?" · today":""}</span><span class="st">Rest day</span></button>`; }
     if(c.done===c.tot){st="Done";cls="full";}
     else if(c.miss===c.tot){st="Missed";cls="miss";}
     else if(c.done+c.miss+c.part>0){st=c.done+"/"+c.tot+" done"+(c.part?" · "+c.part+" partial":"");cls="part";}

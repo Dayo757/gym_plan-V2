@@ -154,6 +154,10 @@ h1{font-size:20px;margin:4px 0 2px}
 .last{font-size:12.5px;color:var(--muted);margin-top:8px;padding:7px 10px;border-radius:8px;background:#121110;border-left:2px solid var(--accent)}
 .last b{color:var(--gold-hi)}
 .mtag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#111;background:var(--accent);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.last div+div{margin-top:3px}
+.last .lt{font-size:11.5px;opacity:.85}
+.use{margin-left:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:7px;padding:3px 8px;font-size:12px;cursor:pointer}
+.kg.reps{width:70px}
 </style>
 </head>
 <body>
@@ -555,9 +559,9 @@ function render(){
         <div class="note">${esc(noteFor(it,w))}</div>
         <div class="row">
           <a class="how" href="${yt(qFor(it,w))}" target="_blank" rel="noopener">▶ How to</a>
-          ${it.kg?`<input class="kg" inputmode="decimal" placeholder="kg" data-kg="${it.id}" data-n="${esc(it.n)}" value="${esc(m.kg||"")}">`:""}
+          ${it.kg?`<input class="kg" inputmode="decimal" placeholder="kg" data-kg="${it.id}" data-n="${esc(it.n)}" value="${esc(m.kg||"")}"><input class="kg reps" inputmode="numeric" placeholder="reps" data-reps="${it.id}" value="${esc(m.reps||"")}" aria-label="Reps on last set">`:""}
         </div>
-        ${lastUI(it, w, d.id)}
+        ${lastUI(it, w, d.id, m)}
         <div class="marks">
           <button class="mark d ${m.s==="d"?"on":""}" data-mk="d" data-id="${it.id}">✓ Done</button>
           <button class="mark p ${m.s==="p"?"on":""}" data-mk="p" data-id="${it.id}">½ Partial</button>
@@ -589,6 +593,7 @@ document.addEventListener("click", e=>{
   else if(t.id==="back"){ view="home"; render(); window.scrollTo(0,0); }
   else if(t.dataset.ps){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.ps = (m.ps===+t.dataset.ps) ? undefined : +t.dataset.ps; state.marks[k]=m; persist(); render(); }
   else if(t.dataset.period){ const k=state.week+"|"+curDay; if(t.dataset.period==="on") state.flags[k]="period"; else delete state.flags[k]; persist(); render(); }
+  else if(t.dataset.use){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.kg=t.dataset.use; m.n=t.dataset.n; state.marks[k]=m; persist(); render(); }
   else if(t.dataset.mk){ const was=isDayDone(); setMark(t.dataset.id, t.dataset.mk); persist(); render(); if(!was && isDayDone()) celebrate(); }
   else if(t.dataset.all){
     const was=isDayDone();
@@ -604,6 +609,8 @@ document.addEventListener("click", e=>{
 document.addEventListener("input", e=>{
   const pid = e.target.dataset && e.target.dataset.pt;
   if(pid){ const k=key(state.week,curDay,pid), m=state.marks[k]||{}; m.p=e.target.value.trim(); state.marks[k]=m; persist(); return; }
+  const rid = e.target.dataset && e.target.dataset.reps;
+  if(rid){ const k=key(state.week,curDay,rid), m=state.marks[k]||{}; m.reps=e.target.value.trim(); if(!m.s && !m.kg && !m.reps) delete state.marks[k]; else state.marks[k]=m; persist(); return; }
   const id = e.target.dataset && e.target.dataset.kg; if(!id) return;
   const k = key(state.week,curDay,id), m = state.marks[k]||{};
   m.kg = e.target.value.trim(); m.n = e.target.dataset.n;
@@ -773,21 +780,54 @@ function setsFor(it, w){
   if(it.rx) return 0;
   const m = rxFor(it, w).match(/^(\d+)\s*×/); return m ? +m[1] : 0;
 }
-function lastLog(it, w, dId, name){
-  for(let pw=w-1; pw>=1; pw--){
-    const m = state.marks[key(pw,dId,it.id)];
-    if(m && m.kg && (!m.n || m.n===name)) return {w:pw, kg:m.kg, s:m.s};
-  }
-  return null;
+// ---------- adaptive weights ----------
+const num = v => { const n = parseFloat(String(v||"").replace(",", ".")); return isNaN(n) ? null : n; };
+const roundTo = (x, step) => Math.round(x/step)*step;
+const isDeloadW = w => ["deload","xmas"].includes(phaseOf(w));
+function repRange(it, w){
+  const r = it.rx ? it.rx : rxFor(it, w).split("×")[1] || "";
+  if(/sec|min|m\b|steps/.test(r)) return null;
+  const m = r.match(/(\d+)\s*[–-]\s*(\d+)/); if(m) return {lo:+m[1], hi:+m[2]};
+  const one = r.match(/(\d+)/); return one ? {lo:+one[1], hi:+one[1]} : null;
 }
-function lastUI(it, w, dId){
+function stepFor(it, dId){
+  const small = /dumbbell|single-arm|single-leg|kettlebell|cable|b-stance|calf|carry/i.test(it.n);
+  if(dId==="sat" || small) return 1;
+  return 2.5;
+}
+function history(it, w, dId, name, includeDeload){
+  const out = [];
+  for(let pw=w-1; pw>=1 && out.length<4; pw--){
+    if(!includeDeload && isDeloadW(pw)) continue;
+    const m = state.marks[key(pw,dId,it.id)];
+    if(m && num(m.kg)!=null && (!m.n || m.n===name)) out.push({w:pw, kg:num(m.kg), reps:num(m.reps), s:m.s});
+  }
+  return out;
+}
+function suggestion(it, w, dId){
+  const H = history(it, w, dId, it.n, false); if(!H.length) return null;
+  const L = H[0], rr = repRange(it, w), step = stepFor(it, dId);
+  if(isDeloadW(w)) return {L, kg: Math.max(step, roundTo(L.kg*0.7, step)), why:"Deload week: about 70% of your normal weight."};
+  const stalled = H.length>=3 && H.slice(0,3).every(h=>h.kg===L.kg) && H.slice(0,3).every(h=> rr && h.reps!=null ? h.reps < rr.hi : h.s!=="d");
+  if(stalled) return {L, kg: Math.max(step, roundTo(L.kg*0.9, step)), why:"Same weight 3 sessions without progress. Drop 10% and build back up."};
+  if(rr && L.reps!=null){
+    if(L.reps >= rr.hi) return {L, kg: L.kg+step, why:`You hit ${L.reps} reps, the top of the range. Go up.`};
+    if(L.reps < rr.lo)  return {L, kg: Math.max(step, roundTo(L.kg*0.9, step)), why:`Only ${L.reps} reps, below the range. Go a little lighter.`};
+    return {L, kg: L.kg, why:`${L.reps} reps last time. Same weight, aim for ${Math.min(L.reps+1, rr.hi)}.`};
+  }
+  if(L.s==="d") return {L, kg: L.kg+step, why:"All sets done last time. Go up."};
+  if(L.s==="p") return {L, kg: L.kg, why:"Not all sets done. Repeat the weight."};
+  return {L, kg: L.kg, why:"Repeat the weight and aim to finish every set."};
+}
+const fmtKg = k => (Math.round(k*10)/10).toString();
+function lastUI(it, w, dId, m){
   if(!it.kg) return "";
-  const L = lastLog(it, w, dId, it.n);
-  if(!L) return `<div class="last">First time: log the weight you use so next time you know what to beat.</div>`;
-  const hint = L.s==="d" ? "All sets done, so go up a little (+1–2.5 kg) or add a rep."
-             : L.s==="p" ? "Not all sets done, so repeat this weight."
-             : "Repeat this weight and aim to finish every set.";
-  return `<div class="last">Last time (week ${L.w}): <b>${esc(L.kg)} kg</b>. ${hint}</div>`;
+  const S = suggestion(it, w, dId);
+  if(!S) return `<div class="last">First time: start light, log the weight and your reps on the last set. The app will suggest your next weight from that.</div>`;
+  const lastTxt = `Last time (week ${S.L.w}): ${fmtKg(S.L.kg)} kg${S.L.reps!=null?" × "+S.L.reps:""}`;
+  const used = num(m.kg);
+  const btn = used==null ? `<button class="use" data-use="${fmtKg(S.kg)}" data-id="${it.id}" data-n="${esc(it.n)}">Use ${fmtKg(S.kg)} kg</button>` : "";
+  return `<div class="last"><div><b>Today: ${fmtKg(S.kg)} kg</b> ${btn}</div><div>${esc(S.why)}</div><div class="lt">${esc(lastTxt)}. Feels too heavy or too light? Change it, the next suggestion adapts to what you log.</div></div>`;
 }
 function partialUI(it, w, m){
   const n = setsFor(it, w);

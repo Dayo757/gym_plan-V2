@@ -783,6 +783,7 @@ function setsFor(it, w){
 // ---------- adaptive weights ----------
 const num = v => { const n = parseFloat(String(v||"").replace(",", ".")); return isNaN(n) ? null : n; };
 const roundTo = (x, step) => Math.round(x/step)*step;
+const fmtKg = k => (Math.round(k*10)/10).toString();
 const isDeloadW = w => ["deload","xmas"].includes(phaseOf(w));
 function repRange(it, w){
   const r = it.rx ? it.rx : rxFor(it, w).split("×")[1] || "";
@@ -790,10 +791,15 @@ function repRange(it, w){
   const m = r.match(/(\d+)\s*[–-]\s*(\d+)/); if(m) return {lo:+m[1], hi:+m[2]};
   const one = r.match(/(\d+)/); return one ? {lo:+one[1], hi:+one[1]} : null;
 }
-function stepFor(it, dId){
-  const small = /dumbbell|single-arm|single-leg|kettlebell|cable|b-stance|calf|carry/i.test(it.n);
-  if(dId==="sat" || small) return 1;
-  return 2.5;
+// Weight jumps by equipment, 5 kg where the kit allows it
+function stepFor(it, dId, kg){
+  const n = it.n.toLowerCase();
+  if(/kettlebell/.test(n)) return 4;                       // 8 → 12 → 16 kg bells
+  if(/barbell|smith|leg press|hack squat|hip thrust machine|machine/.test(n) && !/single-arm/.test(n))
+    return (kg!=null && kg < 40) ? 2.5 : 5;                // 5 kg on big lifts; 2.5 kg while light
+  if(/cable|pulldown|row(?!.*dumbbell)|pull-through|face pull|woodchop|pallof|abduction|curl/.test(n) && !/dumbbell/.test(n))
+    return (kg!=null && kg < 30) ? 2.5 : 5;                // cable/stack: 5 kg once past 30 kg
+  return 2;                                                // dumbbells: next dumbbell up
 }
 function history(it, w, dId, name, includeDeload){
   const out = [];
@@ -806,20 +812,20 @@ function history(it, w, dId, name, includeDeload){
 }
 function suggestion(it, w, dId){
   const H = history(it, w, dId, it.n, false); if(!H.length) return null;
-  const L = H[0], rr = repRange(it, w), step = stepFor(it, dId);
+  const L = H[0], rr = repRange(it, w), step = stepFor(it, dId, H[0].kg);
   if(isDeloadW(w)) return {L, kg: Math.max(step, roundTo(L.kg*0.7, step)), why:"Deload week: about 70% of your normal weight."};
   const stalled = H.length>=3 && H.slice(0,3).every(h=>h.kg===L.kg) && H.slice(0,3).every(h=> rr && h.reps!=null ? h.reps < rr.hi : h.s!=="d");
   if(stalled) return {L, kg: Math.max(step, roundTo(L.kg*0.9, step)), why:"Same weight 3 sessions without progress. Drop 10% and build back up."};
   if(rr && L.reps!=null){
-    if(L.reps >= rr.hi) return {L, kg: L.kg+step, why:`You hit ${L.reps} reps, the top of the range. Go up.`};
+    if(L.reps >= rr.hi+3) return {L, kg: L.kg+step*2, why:`${L.reps} reps, well past the top of the range. Big jump: +${fmtKg(step*2)} kg.`};
+    if(L.reps >= rr.hi) return {L, kg: L.kg+step, why:`You hit ${L.reps} reps, the top of the range. Up ${fmtKg(step)} kg.`};
     if(L.reps < rr.lo)  return {L, kg: Math.max(step, roundTo(L.kg*0.9, step)), why:`Only ${L.reps} reps, below the range. Go a little lighter.`};
     return {L, kg: L.kg, why:`${L.reps} reps last time. Same weight, aim for ${Math.min(L.reps+1, rr.hi)}.`};
   }
-  if(L.s==="d") return {L, kg: L.kg+step, why:"All sets done last time. Go up."};
+  if(L.s==="d") return {L, kg: L.kg+step, why:`All sets done last time. Up ${fmtKg(step)} kg.`};
   if(L.s==="p") return {L, kg: L.kg, why:"Not all sets done. Repeat the weight."};
   return {L, kg: L.kg, why:"Repeat the weight and aim to finish every set."};
 }
-const fmtKg = k => (Math.round(k*10)/10).toString();
 function lastUI(it, w, dId, m){
   if(!it.kg) return "";
   const S = suggestion(it, w, dId);

@@ -131,6 +131,15 @@ h1{font-size:20px;margin:4px 0 2px}
 .celebrate b{font-size:44px;letter-spacing:-.01em;transform:scale(.8);transition:transform .4s cubic-bezier(.2,1.6,.4,1)}
 .celebrate.show b{transform:scale(1)}
 .celebrate span{font-size:16px;opacity:.9}
+.marks{display:flex;gap:6px;margin-top:8px}
+.marks .mark{flex:1;padding:8px 4px}
+.mark.p.on{background:#d98a2b;border-color:#d98a2b;color:#111;font-weight:600}
+.ex.partial{background:#1f160a;border-color:#6b4a1c}
+.pbox{margin-top:8px;font-size:13px;color:var(--muted)}
+.pchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.pchips button{border:1px solid #6b4a1c;background:#0f0f0f;color:var(--ink);border-radius:8px;padding:6px 10px;font-size:13.5px;min-height:36px;cursor:pointer}
+.pchips button.on{background:#d98a2b;border-color:#d98a2b;color:#111;font-weight:600}
+.pbox input{width:100%;margin-top:6px;font-size:16px;padding:8px;border-radius:8px;border:1px solid #6b4a1c;background:#0f0f0f;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -154,6 +163,7 @@ h1{font-size:20px;margin:4px 0 2px}
   <div class="phase" id="phase"></div>
   <div class="stats">
     <div class="stat"><b id="sDone">0</b><span>done</span></div>
+    <div class="stat"><b id="sPart">0</b><span>partial</span></div>
     <div class="stat"><b id="sMiss">0</b><span>missed</span></div>
     <div class="stat"><b id="sPct">0%</b><span>completed</span></div>
   </div>
@@ -321,14 +331,14 @@ function flash(t){ const s=document.getElementById("save"); s.textContent=t; s.c
 // ---------- stats ----------
 function dayItems(d){ return d.groups.flatMap(g=>g.items); }
 function dayCounts(w, d){
-  let done=0, miss=0, tot=0;
-  dayItems(d).forEach(it=>{ tot++; const m=state.marks[key(w,d.id,it.id)]; if(m&&m.s==="d")done++; else if(m&&m.s==="m")miss++; });
-  return {done,miss,tot};
+  let done=0, miss=0, part=0, tot=0;
+  dayItems(d).forEach(it=>{ tot++; const m=state.marks[key(w,d.id,it.id)]; if(m&&m.s==="d")done++; else if(m&&m.s==="m")miss++; else if(m&&m.s==="p")part++; });
+  return {done,miss,part,tot};
 }
 function weekCounts(w){
-  let done=0, miss=0, tot=0;
-  DAYS.filter(d=>!d.rest).forEach(d=>{ const c=dayCounts(w,d); done+=c.done; miss+=c.miss; tot+=c.tot; });
-  return {done,miss,tot};
+  let done=0, miss=0, part=0, tot=0;
+  DAYS.filter(d=>!d.rest).forEach(d=>{ const c=dayCounts(w,d); done+=c.done; miss+=c.miss; part+=c.part; tot+=c.tot; });
+  return {done,miss,part,tot};
 }
 
 // ---------- render ----------
@@ -350,7 +360,8 @@ function render(){
   const wc = weekCounts(w);
   $("sDone").textContent = wc.done;
   $("sMiss").textContent = wc.miss;
-  $("sPct").textContent = (wc.tot?Math.round(100*wc.done/wc.tot):0) + "%";
+  $("sPart").textContent = wc.part;
+  $("sPct").textContent = (wc.tot?Math.round(100*(wc.done+wc.part*0.5)/wc.tot):0) + "%";
   const isThisWeek = w===currentWeek();
   $("weeklist").innerHTML = DAYS.map(d=>{
     const c=dayCounts(w,d);
@@ -358,7 +369,7 @@ function render(){
     if(d.rest){ return `<button class="wrow" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">Rest${(isThisWeek && d.id===todayId())?" · today":""}</span><span class="st">Rest day</span></button>`; }
     if(c.done===c.tot){st="Done";cls="full";}
     else if(c.miss===c.tot){st="Missed";cls="miss";}
-    else if(c.done+c.miss>0){st=c.done+"/"+c.tot+" done";cls="part";}
+    else if(c.done+c.miss+c.part>0){st=c.done+"/"+c.tot+" done"+(c.part?" · "+c.part+" partial":"");cls="part";}
     const today = isThisWeek && d.id===todayId();
     return `<button class="wrow ${today?"today":""} ${cls==="full"?"complete":""}" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">${esc(d.title)}${today?" · today":""}</span><span class="st ${cls}">${st}</span></button>`;
   }).join("");
@@ -379,17 +390,21 @@ function render(){
     h += `<div class="group">${esc(groupLabel(g,w))}</div>`;
     g.items.forEach(it=>{
       const k = key(w,d.id,it.id), m = state.marks[k]||{};
-      const cls = m.s==="d"?"done":m.s==="m"?"miss":"";
+      const cls = m.s==="d"?"done":m.s==="m"?"miss":m.s==="p"?"partial":"";
       h += `<div class="ex ${cls}">
         <div class="top"><div class="name">${esc(nameFor(it,w))}</div><div class="rx">${esc(rxFor(it,w))}</div></div>
         <div class="note">${esc(noteFor(it,w))}</div>
         <div class="row">
           <a class="how" href="${yt(qFor(it,w))}" target="_blank" rel="noopener">▶ How to</a>
           ${it.kg?`<input class="kg" inputmode="decimal" placeholder="kg" data-kg="${it.id}" value="${esc(m.kg||"")}">`:""}
-          <span class="sp"></span>
+        </div>
+        <div class="marks">
           <button class="mark d ${m.s==="d"?"on":""}" data-mk="d" data-id="${it.id}">✓ Done</button>
+          <button class="mark p ${m.s==="p"?"on":""}" data-mk="p" data-id="${it.id}">½ Partial</button>
           <button class="mark m ${m.s==="m"?"on":""}" data-mk="m" data-id="${it.id}">✗ Missed</button>
-        </div></div>`;
+        </div>
+        ${m.s==="p" ? partialUI(it, w, m) : ""}
+        </div>`;
     });
   });
   $("day").innerHTML = h;
@@ -400,6 +415,7 @@ function setMark(id, s){
   const k = key(state.week, curDay, id);
   const m = state.marks[k] || {};
   m.s = (m.s===s) ? undefined : s;
+  if(m.s!=="p"){ delete m.p; delete m.ps; }
   if(!m.s && !m.kg) delete state.marks[k]; else state.marks[k] = m;
 }
 
@@ -411,6 +427,7 @@ document.addEventListener("click", e=>{
   else if(t.dataset.go){ curDay=t.dataset.go; view="workout"; render(); window.scrollTo(0,0); }
   else if(t.id==="goToday"){ curDay=todayId(); view="workout"; render(); window.scrollTo(0,0); }
   else if(t.id==="back"){ view="home"; render(); window.scrollTo(0,0); }
+  else if(t.dataset.ps){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.ps = (m.ps===+t.dataset.ps) ? undefined : +t.dataset.ps; state.marks[k]=m; persist(); render(); }
   else if(t.dataset.mk){ const was=isDayDone(); setMark(t.dataset.id, t.dataset.mk); persist(); render(); if(!was && isDayDone()) celebrate(); }
   else if(t.dataset.all){
     const was=isDayDone();
@@ -424,6 +441,8 @@ document.addEventListener("click", e=>{
   }
 });
 document.addEventListener("input", e=>{
+  const pid = e.target.dataset && e.target.dataset.pt;
+  if(pid){ const k=key(state.week,curDay,pid), m=state.marks[k]||{}; m.p=e.target.value.trim(); state.marks[k]=m; persist(); return; }
   const id = e.target.dataset && e.target.dataset.kg; if(!id) return;
   const k = key(state.week,curDay,id), m = state.marks[k]||{};
   m.kg = e.target.value.trim();
@@ -584,6 +603,25 @@ $("bkRestore").addEventListener("click", ()=>restoreFrom($("bkIn").value));
 // back up on open (catches day-one data and anything missed offline) and when the app is put away
 if(bkOn()) setTimeout(backupNow, 1500);
 document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden" && bkDirty) backupNow(); });
+
+
+// ---------- partial completion ----------
+function setsFor(it, w){
+  if(it.rx) return 0;
+  const m = rxFor(it, w).match(/^(\d+)\s*×/); return m ? +m[1] : 0;
+}
+function partialUI(it, w, m){
+  const n = setsFor(it, w);
+  let h = `<div class="pbox">`;
+  if(n > 1){
+    h += `How many sets did she manage?<div class="pchips">`;
+    for(let i=1;i<n;i++) h += `<button data-ps="${i}" data-id="${it.id}" class="${m.ps===i?"on":""}">${i} of ${n}</button>`;
+    h += `</div><input data-pt="${it.id}" placeholder="Anything else? e.g. fewer reps, lighter weight" value="${esc(m.p||"")}">`;
+  } else {
+    h += `What did she manage?<input data-pt="${it.id}" placeholder="e.g. 6 min, 700 m, 2 rounds" value="${esc(m.p||"")}">`;
+  }
+  return h + `</div>`;
+}
 
 // ---------- completed-day celebration ----------
 function isDayDone(){

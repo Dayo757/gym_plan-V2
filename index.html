@@ -728,7 +728,7 @@ document.addEventListener("click", e=>{
   else if(t.id==="yBack"){ yogaView = false; render(); window.scrollTo(0,0); }
   else if(t.id==="yAll"){ const was=isDayDone(); const d=dayDef(state.week,curDay), g=d.groups.find(isYogaGroup);
     g.items.filter(x=>showItem(x,state.week,curDay)).forEach(it=>{ const k=key(state.week,curDay,it.id), m=state.marks[k]||{}; m.s="d"; state.marks[k]=m; });
-    persist(); render(); if(!was && isDayDone()) celebrate(); }
+    yogaView = false; persist(); render(); window.scrollTo(0,0); if(!was && isDayDone()) celebrate(); }
   else if(t.dataset.feel){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.feel = (m.feel===t.dataset.feel) ? undefined : t.dataset.feel; if(!m.n) m.n=t.dataset.n; state.marks[k]=m; persist(); render(); }
   else if(t.dataset.use){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.kg=t.dataset.use; m.n=t.dataset.n; state.marks[k]=m; persist(); render(); }
   else if(t.dataset.mk){ const was=isDayDone(); setMark(t.dataset.id, t.dataset.mk); persist(); render(); if(!was && isDayDone()) celebrate(); }

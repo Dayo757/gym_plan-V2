@@ -193,6 +193,10 @@ h1{font-size:20px;margin:4px 0 2px}
 .sub2{color:var(--muted);font-size:13.5px;margin:0 0 14px}
 #cipage .cihead b{display:none}
 .fail{font-size:12px;font-weight:600;color:var(--gold-hi);margin:-4px 0 8px}
+.feel{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.feel span{font-size:12px;color:var(--muted);margin-right:2px}
+.feel button{flex:1;border:1px solid var(--line);background:#0f0f0f;color:var(--ink);border-radius:8px;padding:6px 4px;font-size:12.5px;cursor:pointer;min-height:34px}
+.feel button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 </style>
 </head>
 <body>
@@ -625,8 +629,9 @@ function render(){
         ${failLabel(it,w)}
         <div class="row">
           <a class="how" href="${yt(qFor(it,w))}" target="_blank" rel="noopener">▶ How to</a>
-          ${it.kg?`<input class="kg" inputmode="decimal" placeholder="kg" data-kg="${it.id}" data-n="${esc(it.n)}" value="${esc(m.kg||"")}"><input class="kg reps" inputmode="numeric" placeholder="reps (last set)" data-reps="${it.id}" value="${esc(m.reps||"")}" aria-label="Reps on last set">`:""}
+          ${it.kg?`<input class="kg" inputmode="decimal" placeholder="kg" data-kg="${it.id}" data-n="${esc(it.n)}" value="${esc(m.kg||"")}">`:""}
         </div>
+        ${it.kg ? `<div class="feel"><span>How heavy?</span>${["easy","good","hard"].map(f=>`<button data-feel="${f}" data-id="${it.id}" data-n="${esc(it.n)}" class="${m.feel===f?"on":""}">${f==="easy"?"Too easy":f==="good"?"Just right":"Too hard"}</button>`).join("")}</div>` : ""}
         ${lastUI(it, w, d.id, m)}
         <div class="marks">
           <button class="mark d ${m.s==="d"?"on":""}" data-mk="d" data-id="${it.id}">✓ Done</button>
@@ -664,6 +669,7 @@ document.addEventListener("click", e=>{
   else if(t.id==="back"){ view="home"; render(); window.scrollTo(0,0); }
   else if(t.dataset.ps){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.ps = (m.ps===+t.dataset.ps) ? undefined : +t.dataset.ps; state.marks[k]=m; persist(); render(); }
   else if(t.dataset.period){ const k=state.week+"|"+curDay; if(t.dataset.period==="on") state.flags[k]="period"; else delete state.flags[k]; persist(); render(); }
+  else if(t.dataset.feel){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.feel = (m.feel===t.dataset.feel) ? undefined : t.dataset.feel; if(!m.n) m.n=t.dataset.n; state.marks[k]=m; persist(); render(); }
   else if(t.dataset.use){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.kg=t.dataset.use; m.n=t.dataset.n; state.marks[k]=m; persist(); render(); }
   else if(t.dataset.mk){ const was=isDayDone(); setMark(t.dataset.id, t.dataset.mk); persist(); render(); if(!was && isDayDone()) celebrate(); }
   else if(t.dataset.all){
@@ -879,7 +885,7 @@ function history(it, w, dId, name, includeDeload){
   for(let pw=w-1; pw>=1 && out.length<4; pw--){
     if(!includeDeload && isDeloadW(pw)) continue;
     const m = state.marks[key(pw,dId,it.id)];
-    if(m && num(m.kg)!=null && (!m.n || m.n===name)) out.push({w:pw, kg:num(m.kg), reps:num(m.reps), s:m.s});
+    if(m && num(m.kg)!=null && (!m.n || m.n===name)) out.push({w:pw, kg:num(m.kg), reps:num(m.reps), s:m.s, feel:m.feel});
   }
   return out;
 }
@@ -887,8 +893,15 @@ function suggestion(it, w, dId){
   const H = history(it, w, dId, it.n, false); if(!H.length) return null;
   const L = H[0], rr = repRange(it, w), step = stepFor(it, dId, H[0].kg);
   if(isDeloadW(w)) return {L, kg: Math.max(step, roundTo(L.kg*0.7, step)), why:"Deload week: about 70% of your normal weight."};
-  const stalled = H.length>=3 && H.slice(0,3).every(h=>h.kg===L.kg) && H.slice(0,3).every(h=> rr && h.reps!=null ? h.reps < rr.hi : h.s!=="d");
+  const stalled = H.length>=3 && H.slice(0,3).every(h=>h.kg===L.kg) && H.slice(0,3).every(h=> h.feel==="hard" || (h.s && h.s!=="d"));
   if(stalled) return {L, kg: Math.max(step, roundTo(L.kg*0.9, step)), why:"Same weight 3 sessions without progress. Drop 10% and build back up."};
+  if(L.feel){
+    if(L.s==="m") return {L, kg: L.kg, why:"Missed last time. Same weight."};
+    if(L.feel==="easy") return {L, kg: L.kg+step*2, why:`Too easy last time. Up ${fmtKg(step*2)} kg.`};
+    if(L.feel==="good") return {L, kg: L.kg+step, why:`Just right last time. Up ${fmtKg(step)} kg.`};
+    if(L.s==="p") return {L, kg: Math.max(step, roundTo(L.kg*0.9, step)), why:"Too hard and not all sets done. A little lighter."};
+    return {L, kg: L.kg, why:"Too hard last time. Same weight."};
+  }
   if(rr && L.reps!=null){
     if(L.reps >= rr.hi+3) return {L, kg: L.kg+step*2, why:`${L.reps} reps, well past the top of the range. Big jump: +${fmtKg(step*2)} kg.`};
     if(L.reps >= rr.hi) return {L, kg: L.kg+step, why:`You hit ${L.reps} reps, the top of the range. Up ${fmtKg(step)} kg.`};
@@ -903,7 +916,7 @@ function lastUI(it, w, dId, m){
   if(!it.kg) return "";
   const S = suggestion(it, w, dId);
   if(!S) return "";
-  const lastTxt = `Last time (week ${S.L.w}): ${fmtKg(S.L.kg)} kg${S.L.reps!=null?" × "+S.L.reps:""}`;
+  const lastTxt = `Last time (week ${S.L.w}): ${fmtKg(S.L.kg)} kg${S.L.feel?" · "+({easy:"too easy",good:"just right",hard:"too hard"})[S.L.feel]:""}`;
   const used = num(m.kg);
   const btn = used==null ? `<button class="use" data-use="${fmtKg(S.kg)}" data-id="${it.id}" data-n="${esc(it.n)}">Use ${fmtKg(S.kg)} kg</button>` : "";
   return `<div class="last"><div><b>Today: ${fmtKg(S.kg)} kg</b> ${btn}</div><div class="lt">${esc(lastTxt)}</div></div>`;

@@ -184,6 +184,14 @@ h1{font-size:20px;margin:4px 0 2px}
 .citab i{font-style:normal;font-size:11.5px;color:var(--muted)}
 .citab i.dn{color:var(--green)} .citab i.up{color:var(--gold-hi)}
 .cinote{font-size:11.5px!important}
+.cientry{width:100%;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px;cursor:pointer;color:var(--ink);font:inherit;text-align:left}
+.cientry span{flex:1;display:flex;flex-direction:column}
+.cientry small{color:var(--muted);font-size:12.5px;margin-top:2px}
+.cientry em{font-style:normal;font-size:11.5px;font-weight:700;background:var(--accent);color:#111;border-radius:99px;padding:2px 9px}
+.cientry i{font-style:normal;color:var(--accent);font-size:20px}
+.cientry.due{border-color:var(--accent)}
+.sub2{color:var(--muted);font-size:13.5px;margin:0 0 14px}
+#cipage .cihead b{display:none}
 </style>
 </head>
 <body>
@@ -205,7 +213,7 @@ h1{font-size:20px;margin:4px 0 2px}
   </div>
   <div class="plan"><div class="planfill" id="planfill"></div></div>
   <div id="pausebox"></div>
-  <div id="checkin"></div>
+  <button class="cientry" id="goCheckin"><span><b>Monthly check-in</b><small id="ciSub"></small></span><em id="ciBadge" hidden>Due</em><i>›</i></button>
   <div class="phase" id="phase"></div>
   <div class="stats">
     <div class="stat"><b id="sDone">0</b><span>done</span></div>
@@ -226,6 +234,13 @@ h1{font-size:20px;margin:4px 0 2px}
     <input id="bkIn" placeholder="Paste backup code" autocomplete="off" autocapitalize="off">
     <div class="arow"><button id="bkRestore">Restore</button></div>
   </div>
+ </section>
+
+ <section id="cipage" hidden>
+  <div class="wtop"><button id="ciBack">‹ Overview</button><span>Progress</span></div>
+  <h1>Monthly check-in</h1>
+  <p class="sub2">Once a month: weight, waist and glute measurements, and photos. This is how you see the change by April.</p>
+  <div id="checkin"></div>
  </section>
 
  <section id="workout" hidden>
@@ -553,11 +568,11 @@ let view = "home";
 const todayId = () => ["sun","mon","tue","wed","thu","fri","sat"][new Date().getDay()];
 function render(){
   const w = state.week, ph = phaseOf(w);
-  $("home").hidden = view!=="home"; $("workout").hidden = view!=="workout";
+  $("home").hidden = view!=="home"; $("workout").hidden = view!=="workout"; $("cipage").hidden = view!=="checkin";
   const M = planMap(), pos = M.seq.indexOf(w);
   $("wk").textContent = "Week " + (pos+1) + " of " + M.seq.length;
   $("wkdates").textContent = fmt(weekStart(w)) + " – " + fmt(new Date(weekStart(w).getTime()+6*864e5)) + " · " + PHASES[phaseShown(w)].name;
-  renderPause(w); renderCheckin();
+  renderPause(w); renderCheckin(); renderCiEntry();
   $("wkmini").textContent = "Week " + (posOf(w)+1) + (isBWeek(w)?" B":" A") + " · " + PHASES[phaseShown(w)].name;
   $("prev").disabled = pos<=0; $("next").disabled = pos>=M.seq.length-1;
   const dl = daysLeft(); $("countdown").textContent = dl>0 ? dl+" days" : dl===0 ? "Today" : "Done";
@@ -640,6 +655,8 @@ document.addEventListener("click", e=>{
   else if(t.dataset.unpause){ const c=+t.dataset.unpause; state.pauses=state.pauses.filter(x=>x!==c); state.week=currentWeek(); persist(); render(); }
   else if(t.id==="ciSave"){ saveCheckin(); }
   else if(t.id==="ciOpen"){ ciForceOpen=true; renderCheckin(); }
+  else if(t.closest && t.id==="goCheckin"){ view="checkin"; render(); window.scrollTo(0,0); }
+  else if(t.id==="ciBack"){ view="home"; ciForceOpen=false; render(); window.scrollTo(0,0); }
   else if(t.dataset.d){ curDay=t.dataset.d; render(); }
   else if(t.dataset.go){ curDay=t.dataset.go; view="workout"; render(); window.scrollTo(0,0); }
   else if(t.id==="goToday"){ curDay=todayId(); view="workout"; render(); window.scrollTo(0,0); }
@@ -969,10 +986,17 @@ function renderCheckin(){
   }
   $("checkin").innerHTML = h + `</div>`;
 }
+function renderCiEntry(){
+  const due = dueKey(), keys = ["start"].concat(MONTHS).filter(k=>state.checkins[k]);
+  $("ciBadge").hidden = !due;
+  $("goCheckin").classList.toggle("due", !!due);
+  $("ciSub").textContent = due ? (due==="start" ? "Record your starting point" : monthName(due) + " check-in is due")
+    : keys.length ? "Last: " + monthName(keys[keys.length-1]) : "Weight, measurements and photos";
+}
 function saveCheckin(){
   const k = $("ciSave").dataset.key;
   state.checkins[k] = {weight:$("ciW").value.trim(), waist:$("ciWa").value.trim(), glutes:$("ciG").value.trim(), photos:$("ciP").checked, date:new Date().toISOString().slice(0,10)};
-  ciForceOpen = false; persist(); render(); flash("Check-in saved");
+  ciForceOpen = false; persist(); render(); window.scrollTo(0,0); flash("Check-in saved");
 }
 
 // ---------- completed-day celebration ----------

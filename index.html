@@ -140,6 +140,17 @@ h1{font-size:20px;margin:4px 0 2px}
 .pchips button{border:1px solid #6b4a1c;background:#0f0f0f;color:var(--ink);border-radius:8px;padding:6px 10px;font-size:13.5px;min-height:36px;cursor:pointer}
 .pchips button.on{background:#d98a2b;border-color:#d98a2b;color:#111;font-weight:600}
 .pbox input{width:100%;margin-top:6px;font-size:16px;padding:8px;border-radius:8px;border:1px solid #6b4a1c;background:#0f0f0f;color:var(--ink)}
+.pbtn{width:100%;margin:4px 0 2px;border:1px dashed #6e3a4c;background:transparent;color:#e3a3b7;border-radius:10px;padding:9px;font-size:13.5px;cursor:pointer;min-height:40px}
+.pnote{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;background:#24121a;border:1px solid #6e3a4c;border-radius:12px;padding:10px 12px;margin:4px 0 6px}
+.pnote b{color:#e3a3b7;font-size:14px}
+.pnote span{flex:1 1 100%;font-size:12.5px;color:var(--muted);order:3}
+.pnote button{margin-left:auto;border:1px solid #6e3a4c;background:transparent;color:#e3a3b7;border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer}
+#day.periodday .ex{opacity:.55}
+.wrow.period{background:#1d1015;border-color:#5a2f3e}
+.wrow .st.period{background:#3a1c27;color:#e3a3b7}
+.tab.period{border-color:#6e3a4c;color:#e3a3b7}
+.tab.period .dot{background:#c7768f}
+.tab.period.on{background:#c7768f;border-color:#c7768f;color:#111}
 </style>
 </head>
 <body>
@@ -333,9 +344,11 @@ function groupLabel(g, w){
 
 // ---------- state ----------
 const LS = "gcb-tracker-v1";
-let state = {week:1, marks:{}};
+let state = {week:1, marks:{}, flags:{}};
 try{ const raw = localStorage.getItem(LS); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){}
 state.week = currentWeek();
+if(!state.flags || typeof state.flags!=="object") state.flags = {};
+const isPeriod = (w,d) => state.flags[w+"|"+d]==="period";
 let curDay = (() => { const d = new Date().getDay(); return ["sun","mon","tue","wed","thu","fri","sat"][d]; })();
 const key = (w,d,i) => w+"|"+d+"|"+i;
 
@@ -357,7 +370,7 @@ function dayCounts(w, d){
 }
 function weekCounts(w){
   let done=0, miss=0, part=0, tot=0;
-  DAYS.filter(d=>!d.rest).forEach(d=>{ const c=dayCounts(w,d); done+=c.done; miss+=c.miss; part+=c.part; tot+=c.tot; });
+  DAYS.filter(d=>!d.rest && !isPeriod(w,d.id)).forEach(d=>{ const c=dayCounts(w,d); done+=c.done; miss+=c.miss; part+=c.part; tot+=c.tot; });
   return {done,miss,part,tot};
 }
 
@@ -386,6 +399,8 @@ function render(){
   $("weeklist").innerHTML = DAYS.map(d=>{
     const c=dayCounts(w,d);
     let st="Not started", cls="";
+    const todayP = isThisWeek && d.id===todayId();
+    if(isPeriod(w,d.id)){ return `<button class="wrow period" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">${esc(d.title)}${todayP?" · today":""}</span><span class="st period">Period · skipped</span></button>`; }
     if(d.rest){ return `<button class="wrow" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">Rest + yoga${(isThisWeek && d.id===todayId())?" · today":""}</span><span class="st">Rest day</span></button>`; }
     if(c.done===c.tot){st="Done";cls="full";}
     else if(c.miss===c.tot){st="Missed";cls="miss";}
@@ -397,14 +412,18 @@ function render(){
 
   $("tabs").innerHTML = DAYS.map(d=>{
     const c=dayCounts(w,d), cls = c.done===c.tot?"full":(c.done+c.miss>0?"part":"");
-    const comp = !d.rest && c.done===c.tot;
-    return `<button class="tab ${d.id===curDay?"on":""} ${comp?"complete":""}" data-d="${d.id}"><span class="dot ${cls}"></span>${d.tab}</button>`;
+    const comp = !d.rest && c.done===c.tot && !isPeriod(w,d.id);
+    return `<button class="tab ${d.id===curDay?"on":""} ${comp?"complete":""} ${isPeriod(w,d.id)?"period":""}" data-d="${d.id}"><span class="dot ${cls}"></span>${d.tab}</button>`;
   }).join("");
 
   const d = DAYS.find(x=>x.id===curDay);
-  const dc = dayCounts(w,d), dayDone = !d.rest && dc.done===dc.tot;
-  $("day").className = dayDone ? "complete" : "";
+  const per = isPeriod(w,d.id);
+  const dc = dayCounts(w,d), dayDone = !d.rest && !per && dc.done===dc.tot;
+  $("day").className = dayDone ? "complete" : (per ? "periodday" : "");
   let h = (dayDone ? `<div class="donebadge">Completed</div>` : "") + `<div class="dayhead"><h2>${esc(d.tab)} · ${esc(d.title)}</h2><p>${esc(d.sub)}</p></div>`;
+  h += per
+    ? `<div class="pnote"><b>Skipped: period</b><span>Logged for your records. This day doesn't count against your week.</span><button data-period="off">Undo</button></div>`
+    : `<button class="pbtn" data-period="on">Skipped due to period</button>`;
   h += `<div class="dayact"><button data-all="d">Mark whole day done</button><button data-all="m">Missed this session</button><button data-all="x">Clear day</button></div>`;
   d.groups.forEach(g=>{
     h += `<div class="group">${esc(groupLabel(g,w))}</div>`;
@@ -448,6 +467,7 @@ document.addEventListener("click", e=>{
   else if(t.id==="goToday"){ curDay=todayId(); view="workout"; render(); window.scrollTo(0,0); }
   else if(t.id==="back"){ view="home"; render(); window.scrollTo(0,0); }
   else if(t.dataset.ps){ const k=key(state.week,curDay,t.dataset.id), m=state.marks[k]||{}; m.ps = (m.ps===+t.dataset.ps) ? undefined : +t.dataset.ps; state.marks[k]=m; persist(); render(); }
+  else if(t.dataset.period){ const k=state.week+"|"+curDay; if(t.dataset.period==="on") state.flags[k]="period"; else delete state.flags[k]; persist(); render(); }
   else if(t.dataset.mk){ const was=isDayDone(); setMark(t.dataset.id, t.dataset.mk); persist(); render(); if(!was && isDayDone()) celebrate(); }
   else if(t.dataset.all){
     const was=isDayDone();
@@ -512,6 +532,7 @@ function extraMsgs(){
   if(ph==="xmas") out.push("Christmas week: 2–3 sessions and you've won. Enjoy it.");
   if(ph==="push") out.push("Push phase: time to lift the heaviest yet.");
   if(ph==="peak") out.push("Final stretch. Stay steady, it's nearly time.");
+  if(isPeriod(state.week,curDay)){ out.unshift("Listening to your body is part of the plan.","Rest up. Warmth, water, gentle walk if you feel like it."); }
   const c = dayCounts(state.week, DAYS.find(d=>d.id===curDay));
   if(c.tot && c.done===c.tot) out.unshift("Session complete. Absolute legend.");
   return out;
@@ -588,7 +609,7 @@ function queueBackup(){
 async function backupNow(){
   if(!bkOn()) return;
   try{
-    await rpc("save_backup", {p_key: bkKey(), p_data: {marks: state.marks, saved: new Date().toISOString()}});
+    await rpc("save_backup", {p_key: bkKey(), p_data: {marks: state.marks, flags: state.flags, saved: new Date().toISOString()}});
     bkDirty = false;
     try{ localStorage.setItem(BK_AT_LS, new Date().toISOString()); }catch(e){}
   }catch(e){ /* offline or server issue: retried on next change or next open */ }
@@ -600,6 +621,7 @@ async function restoreFrom(code){
     const d = await rpc("get_backup", {p_key: code});
     if(!d || typeof d.marks!=="object"){ flash("No backup found for that code"); return; }
     state.marks = Object.assign({}, d.marks, state.marks);   // keeps anything already on this phone
+    state.flags = Object.assign({}, d.flags||{}, state.flags);
     try{ localStorage.setItem(BK_KEY_LS, code); }catch(e){}
     persist(); render(); flash("Backup restored");
   }catch(e){ flash("Couldn't reach the backup. Try again with signal"); }
@@ -645,7 +667,7 @@ function partialUI(it, w, m){
 
 // ---------- completed-day celebration ----------
 function isDayDone(){
-  const d = DAYS.find(x=>x.id===curDay); if(!d || d.rest) return false;
+  const d = DAYS.find(x=>x.id===curDay); if(!d || d.rest || isPeriod(state.week,curDay)) return false;
   const c = dayCounts(state.week, d); return c.tot>0 && c.done===c.tot;
 }
 const CHEERS = ["Session smashed.","Another one in the bank.","That's how it's done.","April is getting closer.","Consistency looks good on you."];

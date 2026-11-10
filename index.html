@@ -239,7 +239,6 @@ h1{font-size:20px;margin:4px 0 2px}
  <section id="cipage" hidden>
   <div class="wtop"><button id="ciBack">‹ Overview</button><span>Progress</span></div>
   <h1>Monthly check-in</h1>
-  <p class="sub2">Once a month: weight, waist and glute measurements, and photos. This is how you see the change by April.</p>
   <div id="checkin"></div>
  </section>
 
@@ -260,13 +259,13 @@ const TOTAL = 23;
 const START = new Date(2026, 10, 9); // Mon 9 Nov 2026
 const GOAL = new Date(2027, 3, 16);  // Fri 16 Apr 2027
 const PHASES = {
-  found:{name:"Foundation",text:"<b>Foundation.</b> Weeks 1–11 use single-leg, single-arm and dumbbell versions of the main lifts to even out the weaker side and build core and ankle strength. Always start with the weaker side and match its reps on the stronger side. Sets and reps as written. Learn the form, find working weights and stop 2–3 reps short of failure. Cardio at the low end of each time range."},
-  deload:{name:"Deload",text:"<b>Deload week.</b> Same exercises, half the sets, about 70% of your usual weight. Cardio halved too. This is where the body catches up, so don't skip it."},
-  xmas:{name:"Christmas deload",text:"<b>Christmas week.</b> Deload: half the sets, ~70% weight. Aim for 2–3 sessions, whichever days work, and keep walking. Enjoy Christmas Day; get back to normal eating the day after."},
-  build:{name:"Build",text:"<b>Build.</b> Still single-side and dumbbell work until week 11. One extra set on the key lifts (shown). Stop 1–2 reps short of failure. Cardio at the top of each range, Wednesday circuit goes to 4 rounds, rower finisher becomes 1 min hard / 1 min easy."},
-  push:{name:"Push",text:"<b>Push.</b> Barbell hip thrust, RDL and pulldowns come back now both sides are stronger; keep the weaker side leading on single-leg work. Heaviest weights so far on the first exercise each day. Hip thrust and squat aim for 5–8 reps. End of week 16: photos, measurements and record your best lifts."},
-  build2:{name:"Block 2 build",text:"<b>Block 2.</b> Some accessories are swapped for new ones (shown) to keep progress coming. Start the new ones moderate and build up. Extra set on the key lifts stays."},
-  peak:{name:"Final weeks",text:"<b>Final two weeks.</b> Keep lifting at your current weights, no new records needed. Final week: drop one set from every exercise so you feel fresh, not sore. Keep steps and eating steady: no crash dieting or water cutting before the 16th."}
+  found:{name:"Foundation",text:"<b>Foundation.</b> Learn the moves, weaker side first."},
+  deload:{name:"Deload",text:"<b>Deload.</b> Half the sets, lighter weights."},
+  xmas:{name:"Christmas deload",text:"<b>Christmas week.</b> 2–3 light sessions. Enjoy it."},
+  build:{name:"Build",text:"<b>Build.</b> Extra set on the main lifts. Push a bit harder."},
+  push:{name:"Push",text:"<b>Push.</b> Heaviest weights yet. Barbell lifts are back."},
+  build2:{name:"Block 2 build",text:"<b>Block 2.</b> New accessories. Keep adding weight."},
+  peak:{name:"Final weeks",text:"<b>Final weeks.</b> Hold your weights. Stay fresh for the 16th."}
 };
 const phaseOf = w => w<=4?"found": w<=6?"build": w===7?"xmas": w<=11?"build": w===12?"deload": w<=16?"push": w===17?"deload": w<=21?"build2":"peak";
 // Calendar weeks run 9 Nov -> 16 Apr. A paused calendar week pushes the plan back one week;
@@ -610,7 +609,7 @@ function render(){
   $("day").className = dayDone ? "complete" : (per ? "periodday" : "");
   let h = (dayDone ? `<div class="donebadge">Completed</div>` : "") + `<div class="dayhead"><h2>${esc(d.tab)} · ${esc(d.title)}</h2><p>${esc(d.sub)}</p></div>`;
   h += per
-    ? `<div class="pnote"><b>Skipped: period</b><span>Logged for your records. This day doesn't count against your week.</span><button data-period="off">Undo</button></div>`
+    ? `<div class="pnote"><b>Skipped: period</b><span>Doesn't count against your week.</span><button data-period="off">Undo</button></div>`
     : `<button class="pbtn" data-period="on">Skipped due to period</button>`;
   h += `<div class="dayact"><button data-all="d">Mark whole day done</button><button data-all="m">Missed this session</button><button data-all="x">Clear day</button></div>`;
   d.groups.forEach(g=>{
@@ -901,11 +900,11 @@ function suggestion(it, w, dId){
 function lastUI(it, w, dId, m){
   if(!it.kg) return "";
   const S = suggestion(it, w, dId);
-  if(!S) return `<div class="last">First time: start light, log the weight and your reps on the last set. The app will suggest your next weight from that.</div>`;
+  if(!S) return "";
   const lastTxt = `Last time (week ${S.L.w}): ${fmtKg(S.L.kg)} kg${S.L.reps!=null?" × "+S.L.reps:""}`;
   const used = num(m.kg);
   const btn = used==null ? `<button class="use" data-use="${fmtKg(S.kg)}" data-id="${it.id}" data-n="${esc(it.n)}">Use ${fmtKg(S.kg)} kg</button>` : "";
-  return `<div class="last"><div><b>Today: ${fmtKg(S.kg)} kg</b> ${btn}</div><div>${esc(S.why)}</div><div class="lt">${esc(lastTxt)}. Feels too heavy or too light? Change it, the next suggestion adapts to what you log.</div></div>`;
+  return `<div class="last"><div><b>Today: ${fmtKg(S.kg)} kg</b> ${btn}</div><div class="lt">${esc(lastTxt)}</div></div>`;
 }
 function partialUI(it, w, m){
   const n = setsFor(it, w);
@@ -926,24 +925,24 @@ function renderPause(w){
   const M = planMap(), tc = todayCal(), c = M.plan2cal[w];
   let h = "";
   if(M.cal2plan[tc]===0){
-    h += `<div class="pausecard on"><b>This week is paused</b><span>${fmt(calStart(tc))} – ${fmt(new Date(calStart(tc).getTime()+6*864e5))}. Rest up. Your plan picks up where you left off next week.</span><button data-unpause="${tc}">Resume now</button></div>`;
+    h += `<div class="pausecard on"><b>This week is paused</b><span>Picks up where you left off next week.</span><button data-unpause="${tc}">Resume now</button></div>`;
   }
   const future = M.P.filter(x=>x>tc).sort((a,b)=>a-b);
   future.forEach(x=>{ h += `<div class="pausecard"><b>Paused: ${fmt(calStart(x))} – ${fmt(new Date(calStart(x).getTime()+6*864e5))}</b><button data-unpause="${x}">Undo</button></div>`; });
   const started = Object.keys(state.marks).some(k=>k.startsWith(w+"|")) || Object.keys(state.flags).some(k=>k.startsWith(w+"|"));
   if(c && c>=tc && !started && M.P.length < REMOVABLE.length && M.cal2plan[tc]!==0){
-    h += `<button class="pausebtn" data-pause="${c}">Pause this week (ill, away, Christmas)</button>`;
+    h += `<button class="pausebtn" data-pause="${c}">Pause this week</button>`;
   } else if(c && c>=tc && started && c<CAL_WEEKS && M.P.length < REMOVABLE.length){
-    h += `<button class="pausebtn" data-pause="${c+1}">Pause next week (ill, away, Christmas)</button>`;
+    h += `<button class="pausebtn" data-pause="${c+1}">Pause next week</button>`;
   }
-  if(M.P.length) h += `<p class="pnote2">${M.P.length} week${M.P.length>1?"s":""} paused. To still finish on 16 April, ${M.P.length>1?"those weeks are":"that week is"} taken out of the middle of a training block.</p>`;
+
   $("pausebox").innerHTML = h;
 }
 
 // ---------- monthly check-ins ----------
 var ciForceOpen = false;
 var MONTHS = ["2026-11","2026-12","2027-01","2027-02","2027-03","2027-04"];
-var monthName = k => k==="start" ? "Starting point" : new Date(+k.slice(0,4), +k.slice(5)-1, 1).toLocaleDateString("en-GB",{month:"long"});
+function monthName(k){ return k==="start" ? "Starting point" : new Date(+k.slice(0,4), +k.slice(5)-1, 1).toLocaleDateString("en-GB",{month:"long"}); }
 function dueKey(){
   if(!state.checkins.start) return "start";
   const now = new Date(), y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
@@ -967,22 +966,22 @@ function renderCheckin(){
   h += `</div>`;
   if(formKey){
     const v = state.checkins[formKey] || {};
-    h += `<p>${formKey==="start" ? "Record your starting point so you can see the change by April." : "Your <b>"+monthName(formKey)+"</b> check-in"+(due?" is due":"")+". Morning, before eating, same conditions each time."}</p>
+    h += `<p><b>${monthName(formKey)}</b>${formKey==="start"?"":" check-in"}</p>
       <div class="cigrid">
         <label>Weight (kg)<input id="ciW" inputmode="decimal" value="${esc(v.weight||"")}"></label>
         <label>Waist (cm)<input id="ciWa" inputmode="decimal" value="${esc(v.waist||"")}"></label>
         <label>Glutes (cm)<input id="ciG" inputmode="decimal" value="${esc(v.glutes||"")}"></label>
       </div>
-      <label class="cichk"><input type="checkbox" id="ciP" ${v.photos?"checked":""}> Photos taken: front, side, back</label>
+      <label class="cichk"><input type="checkbox" id="ciP" ${v.photos?"checked":""}> Photos taken</label>
       <button id="ciSave" data-key="${formKey}" class="cisave">Save check-in</button>`;
   } else if(!keys.length){
-    h += `<p>Log your weight, waist and glute measurements and photos at the end of each month.</p>`;
+    h += `<p>End of each month.</p>`;
   }
   if(keys.length){
     h += `<table class="citab"><tr><th></th><th>Weight</th><th>Waist</th><th>Glutes</th></tr>`;
     keys.forEach(k=>{ const v=state.checkins[k]; const base = k==="start"?null:S;
       h += `<tr><td>${monthName(k)}</td><td>${esc(v.weight||"–")}${base?delta(v.weight,S.weight):""}</td><td>${esc(v.waist||"–")}${base?delta(v.waist,S.waist):""}</td><td>${esc(v.glutes||"–")}${base?delta(v.glutes,S.glutes):""}</td></tr>`; });
-    h += `</table><p class="cinote">Changes are against your starting point. Waist down and glutes holding or up is the goal; weight alone doesn't tell the whole story.</p>`;
+    h += `</table>`;
   }
   $("checkin").innerHTML = h + `</div>`;
 }

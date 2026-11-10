@@ -151,6 +151,9 @@ h1{font-size:20px;margin:4px 0 2px}
 .tab.period{border-color:#6e3a4c;color:#e3a3b7}
 .tab.period .dot{background:#c7768f}
 .tab.period.on{background:#c7768f;border-color:#c7768f;color:#111}
+.last{font-size:12.5px;color:var(--muted);margin-top:8px;padding:7px 10px;border-radius:8px;background:#121110;border-left:2px solid var(--accent)}
+.last b{color:var(--gold-hi)}
+.mtag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#111;background:var(--accent);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:2px}
 </style>
 </head>
 <body>
@@ -404,6 +407,18 @@ const DAYS_B = {
   {label:"Optional",items:[{id:"walk",n:"Walk",rx:"Easy, any length",note:"Aim for 8,000–10,000 steps",q:"benefits of walking for fat loss"}]}
  ]}
 };
+// Main lifts (first two strength lifts each gym day) are the same every week for weekly progressive overload;
+// everything else alternates A/B.
+const MAIN_LIFTS = {mon:["ht","rdl"], wed:["htm","lp"], fri:["sq","dht"], sat:["pd","csr"]};
+(function(){
+  for(const dId in MAIN_LIFTS){
+    const A = DAYS.find(x=>x.id===dId), B = DAYS_B[dId];
+    const aItems = A.groups.flatMap(g=>g.items).filter(it=>MAIN_LIFTS[dId].includes(it.id));
+    const bGroup = B.groups.find(g=>/Main|strength/i.test(g.label));
+    bGroup.items.splice(0, 2, ...aItems);
+    aItems.forEach(it=>it.main=1);
+  }
+})();
 const isBWeek = w => w % 2 === 0;
 function dayDef(w, dId){
   const base = DAYS.find(x=>x.id===dId);
@@ -536,12 +551,13 @@ function render(){
       const k = key(w,d.id,it.id), m = state.marks[k]||{};
       const cls = m.s==="d"?"done":m.s==="m"?"miss":m.s==="p"?"partial":"";
       h += `<div class="ex ${cls}">
-        <div class="top"><div class="name">${esc(nameFor(it,w))}</div><div class="rx">${esc(rxFor(it,w))}</div></div>
+        <div class="top"><div class="name">${esc(nameFor(it,w))}${it.main?' <span class="mtag">Main lift</span>':""}</div><div class="rx">${esc(rxFor(it,w))}</div></div>
         <div class="note">${esc(noteFor(it,w))}</div>
         <div class="row">
           <a class="how" href="${yt(qFor(it,w))}" target="_blank" rel="noopener">▶ How to</a>
-          ${it.kg?`<input class="kg" inputmode="decimal" placeholder="kg" data-kg="${it.id}" value="${esc(m.kg||"")}">`:""}
+          ${it.kg?`<input class="kg" inputmode="decimal" placeholder="kg" data-kg="${it.id}" data-n="${esc(it.n)}" value="${esc(m.kg||"")}">`:""}
         </div>
+        ${lastUI(it, w, d.id)}
         <div class="marks">
           <button class="mark d ${m.s==="d"?"on":""}" data-mk="d" data-id="${it.id}">✓ Done</button>
           <button class="mark p ${m.s==="p"?"on":""}" data-mk="p" data-id="${it.id}">½ Partial</button>
@@ -590,7 +606,7 @@ document.addEventListener("input", e=>{
   if(pid){ const k=key(state.week,curDay,pid), m=state.marks[k]||{}; m.p=e.target.value.trim(); state.marks[k]=m; persist(); return; }
   const id = e.target.dataset && e.target.dataset.kg; if(!id) return;
   const k = key(state.week,curDay,id), m = state.marks[k]||{};
-  m.kg = e.target.value.trim();
+  m.kg = e.target.value.trim(); m.n = e.target.dataset.n;
   if(!m.s && !m.kg) delete state.marks[k]; else state.marks[k]=m;
   persist();
 });
@@ -756,6 +772,22 @@ document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState=
 function setsFor(it, w){
   if(it.rx) return 0;
   const m = rxFor(it, w).match(/^(\d+)\s*×/); return m ? +m[1] : 0;
+}
+function lastLog(it, w, dId, name){
+  for(let pw=w-1; pw>=1; pw--){
+    const m = state.marks[key(pw,dId,it.id)];
+    if(m && m.kg && (!m.n || m.n===name)) return {w:pw, kg:m.kg, s:m.s};
+  }
+  return null;
+}
+function lastUI(it, w, dId){
+  if(!it.kg) return "";
+  const L = lastLog(it, w, dId, it.n);
+  if(!L) return `<div class="last">First time: log the weight you use so next time you know what to beat.</div>`;
+  const hint = L.s==="d" ? "All sets done, so go up a little (+1–2.5 kg) or add a rep."
+             : L.s==="p" ? "Not all sets done, so repeat this weight."
+             : "Repeat this weight and aim to finish every set.";
+  return `<div class="last">Last time (week ${L.w}): <b>${esc(L.kg)} kg</b>. ${hint}</div>`;
 }
 function partialUI(it, w, m){
   const n = setsFor(it, w);

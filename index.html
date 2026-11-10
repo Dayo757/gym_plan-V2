@@ -580,7 +580,7 @@ function persist(){
 function flash(t){ const s=document.getElementById("save"); s.textContent=t; s.classList.add("show"); clearTimeout(flash.t); flash.t=setTimeout(()=>s.classList.remove("show"),1200); }
 
 // ---------- stats ----------
-function dayItems(d, w){ const dd = w==null ? d : dayDef(w, d.id); return dd.groups.flatMap(g=>g.items).filter(it=> w==null || showItem(it,w,d.id)); }
+function dayItems(d, w){ const dd = w==null ? d : dayDef(w, d.id); return dd.groups.filter(g=>g.label!=="Optional").flatMap(g=>g.items).filter(it=> w==null || showItem(it,w,d.id)); }
 function dayCounts(w, d){
   let done=0, miss=0, part=0, tot=0;
   dayItems(d,w).forEach(it=>{ tot++; const m=state.marks[key(w,d.id,it.id)]; if(m&&m.s==="d")done++; else if(m&&m.s==="m")miss++; else if(m&&m.s==="p")part++; });
@@ -621,7 +621,7 @@ function render(){
     let st="Not started", cls="";
     const todayP = isThisWeek && d.id===todayId();
     if(isPeriod(w,d.id)){ return `<button class="wrow period" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">${esc(dayDef(w,d.id).title)}${todayP?" · today":""}</span><span class="st period">Period · skipped</span></button>`; }
-    if(d.rest){ return `<button class="wrow" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">Rest + yoga${(isThisWeek && d.id===todayId())?" · today":""}</span><span class="st">Rest day</span></button>`; }
+    if(d.rest){ const rc=dayCounts(w,d), rdone=rc.tot>0 && rc.done===rc.tot; return `<button class="wrow ${rdone?"complete":""}" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">Rest + yoga${(isThisWeek && d.id===todayId())?" · today":""}</span><span class="st ${rdone?"full":""}">${rdone?"Yoga done":"Rest day"}</span></button>`; }
     if(c.done===c.tot){st="Done";cls="full";}
     else if(c.miss===c.tot){st="Missed";cls="miss";}
     else if(c.done+c.miss+c.part>0){st=c.done+"/"+c.tot+" done"+(c.part?" · "+c.part+" partial":"");cls="part";}
@@ -632,13 +632,13 @@ function render(){
 
   $("tabs").innerHTML = DAYS.map(d=>{
     const c=dayCounts(w,d), cls = c.done===c.tot?"full":(c.done+c.miss>0?"part":"");
-    const comp = !d.rest && c.done===c.tot && !isPeriod(w,d.id);
+    const comp = c.tot>0 && c.done===c.tot && !isPeriod(w,d.id);
     return `<button class="tab ${d.id===curDay?"on":""} ${comp?"complete":""} ${isPeriod(w,d.id)?"period":""}" data-d="${d.id}"><span class="dot ${cls}"></span>${d.tab}</button>`;
   }).join("");
 
   const d = dayDef(w, curDay);
   const per = isPeriod(w,d.id);
-  const dc = dayCounts(w,d), dayDone = !d.rest && !per && dc.done===dc.tot;
+  const dc = dayCounts(w,d), dayDone = !per && dc.tot>0 && dc.done===dc.tot;
   $("day").className = dayDone ? "complete" : (per ? "periodday" : "");
   let h = (dayDone ? `<div class="donebadge">Completed</div>` : "") + `<div class="dayhead"><h2>${esc(d.tab)} · ${esc(d.title)}</h2><p>${esc(d.sub)}</p></div>`;
   h += per
@@ -1086,7 +1086,7 @@ function saveCheckin(){
 
 // ---------- completed-day celebration ----------
 function isDayDone(){
-  const d = DAYS.find(x=>x.id===curDay); if(!d || d.rest || isPeriod(state.week,curDay)) return false;
+  const d = DAYS.find(x=>x.id===curDay); if(!d || isPeriod(state.week,curDay)) return false;
   const c = dayCounts(state.week, d); return c.tot>0 && c.done===c.tot;
 }
 const CHEERS = ["Session smashed.","Another one in the bank.","That's how it's done.","April is getting closer.","Consistency looks good on you."];

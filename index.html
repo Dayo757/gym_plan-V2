@@ -158,6 +158,32 @@ h1{font-size:20px;margin:4px 0 2px}
 .last .lt{font-size:11.5px;opacity:.85}
 .use{margin-left:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:7px;padding:3px 8px;font-size:12px;cursor:pointer}
 .kg.reps{width:70px}
+.sstag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:5px;padding:0 5px;margin-left:6px;vertical-align:2px}
+.pausebtn{width:100%;margin:0 0 12px;border:1px dashed var(--line);background:transparent;color:var(--muted);border-radius:10px;padding:9px;font-size:13px;cursor:pointer;min-height:40px}
+.pausecard{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13.5px}
+.pausecard.on{border-color:var(--accent);background:var(--accent-soft)}
+.pausecard b{color:var(--ink)}
+.pausecard span{flex:1 1 100%;order:3;color:var(--muted);font-size:12.5px}
+.pausecard button{margin-left:auto;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer}
+.pnote2{font-size:12px;color:var(--muted);margin:-4px 0 12px}
+.cicard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:13.5px}
+.cicard.due{border-color:var(--accent);box-shadow:0 0 0 1px rgba(212,175,55,.25)}
+.cihead{display:flex;justify-content:space-between;align-items:center}
+.cihead b{font-size:15px}
+.cilink{border:0;background:none;color:var(--accent);font-size:13px;cursor:pointer;padding:4px 0}
+.cicard p{color:var(--muted);margin:6px 0}
+.cigrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+.cigrid label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.cigrid input{font-size:16px;padding:8px;border-radius:8px;border:1px solid var(--line);background:#0f0f0f;color:var(--ink);width:100%}
+.cichk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin:4px 0 10px}
+.cichk input{width:20px;height:20px;accent-color:#d4af37}
+.cisave{width:100%;border:0;background:var(--accent);color:#111;font-weight:650;border-radius:10px;padding:11px;font-size:14px;cursor:pointer}
+.citab{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+.citab th{text-align:left;color:var(--muted);font-weight:500;font-size:11.5px;padding:4px 2px}
+.citab td{padding:6px 2px;border-top:1px solid var(--line)}
+.citab i{font-style:normal;font-size:11.5px;color:var(--muted)}
+.citab i.dn{color:var(--green)} .citab i.up{color:var(--gold-hi)}
+.cinote{font-size:11.5px!important}
 </style>
 </head>
 <body>
@@ -178,6 +204,8 @@ h1{font-size:20px;margin:4px 0 2px}
     <button id="next" aria-label="Next week">›</button>
   </div>
   <div class="plan"><div class="planfill" id="planfill"></div></div>
+  <div id="pausebox"></div>
+  <div id="checkin"></div>
   <div class="phase" id="phase"></div>
   <div class="stats">
     <div class="stat"><b id="sDone">0</b><span>done</span></div>
@@ -226,13 +254,35 @@ const PHASES = {
   peak:{name:"Final weeks",text:"<b>Final two weeks.</b> Keep lifting at your current weights, no new records needed. Final week: drop one set from every exercise so you feel fresh, not sore. Keep steps and eating steady: no crash dieting or water cutting before the 16th."}
 };
 const phaseOf = w => w<=4?"found": w<=6?"build": w===7?"xmas": w<=11?"build": w===12?"deload": w<=16?"push": w===17?"deload": w<=21?"build2":"peak";
-const weekStart = w => new Date(START.getFullYear(), START.getMonth(), START.getDate() + (w-1)*7);
+// Calendar weeks run 9 Nov -> 16 Apr. A paused calendar week pushes the plan back one week;
+// to still finish on 16 April, each pause drops one week from the middle of a block.
+const CAL_WEEKS = TOTAL;
+const REMOVABLE = [21,20,19,18,11,10,9,8];
+const calStart = c => new Date(START.getFullYear(), START.getMonth(), START.getDate() + (c-1)*7);
+function getPauses(){ try{ return Array.isArray(state.pauses) ? state.pauses : []; }catch(e){ return []; } }
+function planMap(){
+  const P = getPauses().filter(c=>c>=1 && c<=CAL_WEEKS).slice(0, REMOVABLE.length);
+  const removed = new Set(REMOVABLE.slice(0, P.length));
+  const seq = []; for(let w=1; w<=TOTAL; w++) if(!removed.has(w)) seq.push(w);
+  const cal2plan = {}, plan2cal = {}; let i = 0;
+  for(let c=1; c<=CAL_WEEKS; c++){ if(P.includes(c)) cal2plan[c] = 0; else { const w = seq[i++]; cal2plan[c] = w; plan2cal[w] = c; } }
+  return {seq, cal2plan, plan2cal, P};
+}
+const weekStart = w => calStart(planMap().plan2cal[w] || w);
+function todayCal(){
+  const now = new Date(); const t = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.min(CAL_WEEKS, Math.max(1, Math.floor((t - START)/(7*864e5)) + 1));
+}
+const posOf = w => planMap().seq.indexOf(w);
 const fmt = d => d.toLocaleDateString("en-GB",{day:"numeric",month:"short"});
 function currentWeek(){
-  const now = new Date(); const t = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const w = Math.floor((t - START)/(7*864e5)) + 1;
-  return Math.min(TOTAL, Math.max(1, w));
+  const M = planMap(), c = todayCal();
+  if(M.cal2plan[c]) return M.cal2plan[c];
+  for(let k=c+1; k<=CAL_WEEKS; k++) if(M.cal2plan[k]) return M.cal2plan[k];
+  return M.seq[M.seq.length-1];
 }
+const containsXmas = w => { const a = weekStart(w), b = new Date(a.getTime()+6*864e5); return a <= new Date(2026,11,25) && b >= new Date(2026,11,25); };
+const phaseShown = w => (phaseOf(w)==="xmas" && !containsXmas(w)) ? "deload" : phaseOf(w);
 function daysLeft(){
   const now = new Date(); const t = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return Math.round((GOAL - t)/864e5);
@@ -240,16 +290,16 @@ function daysLeft(){
 
 // type: lift (sets x reps) | text (prescription string)
 const DAYS = [
- {id:"mon",tab:"Mon",title:"Lower A: heavy glutes",sub:"Rest 2–3 min on the first two lifts, 60–90 sec on the rest.",groups:[
+ {id:"mon",tab:"Mon",title:"Lower A: heavy glutes",sub:"About 60 min. Do the \"Between sets\" exercises while resting from your main lifts.",groups:[
   {label:"Warm-up · cardio",items:[{id:"wu",n:"Bike 5 min + 1000 m row",rx:"5 min + 1000 m",keep:1,note:"Bike easy, then row at a steady pace (about 5 min). Warm and slightly out of breath, not tired. Note your row time and try to beat it",q:"gym warm up bike rowing machine"},{id:"act",n:"Glute activation",rx:"2 rounds",note:"10 glute bridges + 10 band walks each way + 10 ankle circles each way",q:"glute activation band walks glute bridge"}]},
   {label:"Main",items:[
    {id:"ht",n:"Barbell hip thrust",s:4,r:"6–10",pr:"5–8",plus:1,note:"1-sec squeeze at top, chin tucked, ribs down",q:"barbell hip thrust",kg:1,early:{n:"Single-leg hip thrust",s:3,r:"8–12 each",note:"Shoulders on bench, one foot planted. Weaker side first. Add a dumbbell on the hip once 12 reps is easy",q:"single leg hip thrust"}},
    {id:"rdl",n:"Romanian deadlift",s:3,r:"8–10",plus:1,note:"Hips back, soft knees, bar close to legs",q:"romanian deadlift",kg:1,early:{n:"Single-leg dumbbell RDL",r:"8–10 each",note:"Dumbbell in the opposite hand, soft standing knee. Lightly hold a bench for balance at first. Trains the ankle too",q:"single leg dumbbell romanian deadlift"}},
    {id:"bss",n:"Bulgarian split squat",s:3,r:"8–12 each",note:"Lean torso slightly forward to bias glutes",q:"bulgarian split squat glute focus",kg:1,alt:{n:"Dumbbell walking lunge",note:"Long strides, slight forward lean, drive through front heel",q:"dumbbell walking lunge glutes"}},
-   {id:"bext",n:"45° back extension",s:3,r:"12–15",note:"Round upper back slightly, squeeze glutes to rise",q:"45 degree back extension glute focus",kg:1},
-   {id:"abd",n:"Seated hip abduction",s:2,r:"15–20",note:"Lean forward. Moderate weight only",q:"seated hip abduction machine",kg:1},
-   {id:"db",n:"Dead bug",s:3,r:"8 each side",note:"Lower back pressed into the floor",q:"dead bug exercise"},
-   {id:"calf",n:"Single-leg calf raise",s:3,r:"12–15 each",note:"On a step: full stretch at the bottom, 2 seconds down. Hold a rail for balance. Builds ankle strength",q:"single leg calf raise on step",kg:1,since:"2026-11-10"}]},
+   {id:"bext",n:"45° back extension",s:2,r:"12–15",note:"Round upper back slightly, squeeze glutes to rise",q:"45 degree back extension glute focus",kg:1},
+   {until:"2026-11-09",id:"abd",n:"Seated hip abduction",s:2,r:"15–20",note:"Lean forward. Moderate weight only",q:"seated hip abduction machine",kg:1},
+   {ss:1,id:"db",n:"Dead bug",s:3,r:"8 each side",note:"Lower back pressed into the floor",q:"dead bug exercise"},
+   {ss:1,id:"calf",n:"Single-leg calf raise",s:3,r:"12–15 each",note:"On a step: full stretch at the bottom, 2 seconds down. Hold a rail for balance. Builds ankle strength",q:"single leg calf raise on step",kg:1,since:"2026-11-10"}]},
   {label:"Finisher · end cardio",items:[{id:"fin",n:"Step machine",rx:"10–15 min",keep:1,note:"Steady pace, stand tall, no leaning on the rails",q:"stairmaster proper form"}]}
  ]},
  {id:"tue",tab:"Tue",title:"Rest + yoga",rest:1,sub:"No gym today. About 15 min of yoga for hips, glutes and hamstrings after Monday's leg day.",groups:[
@@ -265,13 +315,13 @@ const DAYS = [
    {id:"y9",n:"Legs up the wall",rx:"2 min",keep:1,note:"Just breathe. Helps tired legs recover",q:"legs up the wall yoga"}]},
   {label:"Optional",items:[{id:"walk",n:"Walk",rx:"Easy, any length",note:"Aim for 8,000–10,000 steps",q:"benefits of walking for fat loss"}]}
  ]},
- {id:"wed",tab:"Wed",title:"Full body conditioning: machines + kettlebells",sub:"Part 1 strength (~20 min), Part 2 circuit (~20 min).",groups:[
+ {id:"wed",tab:"Wed",title:"Full body conditioning: machines + kettlebells",sub:"About 60 min: warm-up, strength, 3-round circuit, core, cool-down.",groups:[
   {label:"Warm-up · cardio",items:[{id:"wu",n:"1000 m row + bike 5 min",rx:"1000 m + 5 min",keep:1,note:"Row at a steady pace, then easy bike. Note your row time",q:"rowing machine warm up"}]},
   {label:"Part 1: machines",items:[
    {id:"htm",n:"Hip thrust machine",s:3,r:"10–12",note:"Second glute hit of the week",q:"hip thrust machine",kg:1,early:{n:"B-stance dumbbell hip thrust",r:"10–12 each",note:"Most weight on the working leg, other heel lightly down. Builds each side evenly",q:"b stance hip thrust dumbbell"}},
    {id:"lp",n:"Leg press, feet high and wide",s:3,r:"10–12",note:"Higher feet shift work to glutes",q:"leg press glute focus feet high",kg:1,early:{n:"Single-leg leg press",r:"10–12 each",note:"Light weight, foot in the middle of the plate. Match the reps on both legs",q:"single leg leg press"}},
    {id:"apu",n:"Assisted pull-up machine",s:3,r:"6–8",note:"Goal: one unassisted pull-up",q:"assisted pull up machine",kg:1},
-   {id:"mrow",n:"Seated machine row",s:3,r:"10–12",note:"Squeeze shoulder blades together",q:"seated machine row",kg:1,early:{n:"Single-arm cable row",r:"10–12 each",note:"One arm at a time, weaker side first. Don't twist",q:"single arm seated cable row"}}]},
+   {until:"2026-11-09",id:"mrow",n:"Seated machine row",s:3,r:"10–12",note:"Squeeze shoulder blades together",q:"seated machine row",kg:1,early:{n:"Single-arm cable row",r:"10–12 each",note:"One arm at a time, weaker side first. Don't twist",q:"single arm seated cable row"}}]},
   {label:"Part 2: kettlebell circuit",circuit:1,items:[
    {id:"sw",n:"Kettlebell swing",rx:"15 reps",note:"Hip snap, not a squat or front raise",q:"kettlebell swing",kg:1},
    {id:"gs",n:"Goblet squat",rx:"10 reps",note:"Elbows inside knees, chest up",q:"kettlebell goblet squat",kg:1},
@@ -279,38 +329,38 @@ const DAYS = [
    {id:"sc",n:"Suitcase carry",rx:"30 m each side",note:"Don't lean; trains obliques without bulking the waist",q:"kettlebell suitcase carry",kg:1},
    {id:"mc",n:"Mountain climbers",rx:"30 sec",note:"Hips level with shoulders",q:"mountain climbers"}]},
   {label:"Core",items:[
-   {id:"aw",n:"Ab wheel rollout (knees)",s:3,r:"6–10",note:"Stop before the lower back sags",q:"ab wheel rollout from knees"},
-   {id:"sp",n:"Side plank",s:2,r:"20–30 sec each",note:"Hips high, straight line",q:"side plank"},
-   {id:"bal",n:"Single-leg balance",s:3,r:"30 sec each",note:"Stand on one foot, knee soft. Too easy? Close your eyes or stand on a cushion. Key for weak ankles",q:"single leg balance exercise ankle stability",since:"2026-11-10"}]},
+   {id:"aw",n:"Ab wheel rollout (knees)",s:2,r:"6–10",note:"Stop before the lower back sags",q:"ab wheel rollout from knees"},
+   {ss:1,id:"sp",n:"Side plank",s:2,r:"20–30 sec each",note:"Hips high, straight line",q:"side plank"},
+   {ss:1,id:"bal",n:"Single-leg balance",s:3,r:"30 sec each",note:"Stand on one foot, knee soft. Too easy? Close your eyes or stand on a cushion. Key for weak ankles",q:"single leg balance exercise ankle stability",since:"2026-11-10"}]},
   {label:"Finisher · end cardio",items:[{id:"fin",n:"Bike, easy",rx:"10 min",keep:1,note:"Cool-down pace after the circuit",q:"stationary bike cool down"}]}
  ]},
  {id:"thu",tab:"Thu",title:"Cardio day",sub:"Steady pace: you can talk in short sentences. No sprints, Friday is a leg day.",groups:[
   {label:"Cardio",items:[{id:"c1",n:"Stair climber, incline walk or cross-trainer",rx:"30–45 min",note:"Steady, moderate effort. Swap machines halfway if it gets boring",q:"stairmaster workout beginner"}]}
  ]},
- {id:"fri",tab:"Fri",title:"Lower B: glute volume",sub:"Rest 2 min on the first two, 60–90 sec on the rest.",groups:[
+ {id:"fri",tab:"Fri",title:"Lower B: glute volume",sub:"About 60 min. Do the \"Between sets\" exercises while resting from your main lifts.",groups:[
   {label:"Warm-up · cardio",items:[{id:"wu",n:"Step machine 5 min + bike 5 min",rx:"10 min",keep:1,note:"Easy pace, building up",q:"stairmaster warm up"},{id:"act",n:"Glute activation",rx:"2 rounds",note:"10 glute bridges + 10 band walks each way + 10 ankle circles each way",q:"glute activation band walks glute bridge"}]},
   {label:"Main",items:[
    {id:"sq",n:"Smith machine or goblet squat",s:3,r:"8–12",pr:"6–8",note:"Feet slightly wide, sit back and down",q:"smith machine squat glutes",kg:1,early:{n:"Dumbbell goblet squat",r:"10–12",note:"Heavy dumbbell held at the chest, sit down between the heels. Keeps the core working",q:"dumbbell goblet squat"}},
    {id:"dht",n:"Dumbbell hip thrust or glute bridge",s:3,r:"12–15",note:"Lighter, higher reps than Monday",q:"dumbbell hip thrust",kg:1,early:{n:"Single-leg glute bridge",r:"10–12 each",note:"On the floor, one foot planted, weaker side first. Add a dumbbell on the hip when easy",q:"single leg glute bridge"}},
    {id:"rl",n:"Reverse lunge (deficit if able)",s:3,r:"10 each",note:"Step back long, drive through the front heel",q:"deficit reverse lunge",kg:1,alt:{n:"Dumbbell step-up",note:"Box at knee height, push through the heel, control the way down",q:"dumbbell step up glutes"}},
-   {id:"ck",n:"Cable glute kickback",s:3,r:"12–15 each",note:"Kick back and slightly out, no lower-back arch",q:"cable glute kickback",kg:1,alt:{n:"Single-leg hip thrust",note:"Shoulders on bench, one foot down, squeeze at the top",q:"single leg hip thrust"}},
+   {id:"ck",n:"Cable glute kickback",s:2,r:"12–15 each",note:"Kick back and slightly out, no lower-back arch",q:"cable glute kickback",kg:1,alt:{n:"Single-leg hip thrust",note:"Shoulders on bench, one foot down, squeeze at the top",q:"single leg hip thrust"}},
    {id:"hc",n:"Lying hamstring curl",s:2,r:"10–12",note:"Control the lowering",q:"lying hamstring curl machine",kg:1,early:{n:"Single-leg hamstring curl",r:"10–12 each",note:"Light weight on the lying curl machine, one leg at a time",q:"single leg lying hamstring curl"}},
-   {id:"pl",n:"Plank",s:3,r:"30–45 sec",note:"Squeeze glutes, brace like taking a punch",q:"plank proper form"},
-   {id:"ank",n:"Banded ankle 4-way",s:2,r:"15 each direction",note:"Seated, band round the foot: push down, pull up, turn in, turn out. Both ankles",q:"resistance band ankle strengthening exercises",since:"2026-11-10"}]},
+   {ss:1,id:"pl",n:"Plank",s:3,r:"30–45 sec",note:"Squeeze glutes, brace like taking a punch",q:"plank proper form"},
+   {ss:1,id:"ank",n:"Banded ankle 4-way",s:2,r:"15 each direction",note:"Seated, band round the foot: push down, pull up, turn in, turn out. Both ankles",q:"resistance band ankle strengthening exercises",since:"2026-11-10"}]},
   {label:"Finisher · end cardio",items:[{id:"fin",n:"Bike intervals",rx:"10 min",keep:1,note:"10 rounds: 20 sec hard / 40 sec easy. Deload weeks: steady instead",q:"bike sprint intervals"}]}
  ]},
- {id:"sat",tab:"Sat",title:"Upper: back + core",sub:"Rest 2 min on the first two, 60–90 sec on the rest.",groups:[
+ {id:"sat",tab:"Sat",title:"Upper: back + core",sub:"About 60 min. Do the \"Between sets\" exercises while resting from your main lifts.",groups:[
   {label:"Warm-up · cardio",items:[{id:"wu",n:"Bike 5 min + 1000 m row",rx:"5 min + 1000 m",keep:1,note:"Steady pace. The row warms up the back for pulldowns",q:"gym warm up bike rowing machine"}]},
   {label:"Main",items:[
    {id:"pd",n:"Lat pulldown",s:4,r:"8–12",pr:"6–8",plus:1,note:"Pull elbows down to ribs",q:"lat pulldown",kg:1,early:{n:"Single-arm lat pulldown",s:3,r:"10–12 each",note:"Cable with a handle, pull the elbow down to the hip. Weaker side first",q:"single arm lat pulldown cable"}},
    {id:"csr",n:"Chest-supported row",s:3,r:"8–12",plus:1,note:"Squeeze shoulder blades, pause 1 sec",q:"chest supported row",kg:1,early:{n:"Chest-supported dumbbell row",r:"10–12",note:"Face down on an incline bench, a dumbbell in each hand. Both sides have to pull their own weight",q:"chest supported dumbbell row incline bench"}},
    {id:"sar",n:"Single-arm dumbbell row",s:3,r:"10–12 each",note:"Elbow travels towards the hip",q:"single arm dumbbell row",kg:1,alt:{n:"Single-arm cable row",note:"Reach forward, pull elbow to hip",q:"single arm seated cable row"}},
-   {id:"sap",n:"Straight-arm cable pulldown",s:3,r:"12–15",note:"Lats only, arms nearly straight",q:"straight arm cable pulldown",kg:1},
-   {id:"fp",n:"Face pull",s:3,r:"15",note:"Rear delts and posture",q:"cable face pull",kg:1},
+   {until:"2026-11-09",id:"sap",n:"Straight-arm cable pulldown",s:3,r:"12–15",note:"Lats only, arms nearly straight",q:"straight arm cable pulldown",kg:1},
+   {id:"fp",n:"Face pull",s:2,r:"15",note:"Rear delts and posture",q:"cable face pull",kg:1},
    {id:"dbb",n:"Dumbbell bench press",s:2,r:"10–12",note:"Balances the pulling",q:"dumbbell bench press",kg:1,early:{n:"Single-arm dumbbell bench press",r:"10–12 each",note:"One dumbbell, other hand on your belly. Your core works to stop you rolling",q:"single arm dumbbell bench press"}},
-   {id:"pp",n:"Pallof press",s:3,r:"10 each side",note:"Resist the cable twisting you",q:"pallof press",kg:1},
-   {id:"hkr",n:"Hanging knee raise",s:3,r:"8–12",note:"Curl the pelvis up, no swinging",q:"hanging knee raise"},
-   {id:"carry",n:"Single-arm farmer carry",s:3,r:"30 m each side",note:"Heavy dumbbell in one hand, walk tall without leaning. Works the core and ankles",q:"single arm farmer carry",kg:1,since:"2026-11-10"}]},
+   {ss:1,id:"pp",n:"Pallof press",s:3,r:"10 each side",note:"Resist the cable twisting you",q:"pallof press",kg:1},
+   {ss:1,id:"hkr",n:"Hanging knee raise",s:3,r:"8–12",note:"Curl the pelvis up, no swinging",q:"hanging knee raise"},
+   {id:"carry",n:"Single-arm farmer carry",s:2,r:"30 m each side",note:"Heavy dumbbell in one hand, walk tall without leaning. Works the core and ankles",q:"single arm farmer carry",kg:1,since:"2026-11-10"}]},
   {label:"Finisher · end cardio",items:[{id:"fin",n:"1000 m row + step machine 5 min",rx:"1000 m + 5 min",keep:1,note:"Row hard but controlled: legs, lean back, then pull. Note your time and try to beat it each week",q:"rowing machine technique"}]}
  ]},
  {id:"sun",tab:"Sun",title:"Rest + yoga",rest:1,sub:"Recovery day. About 15 min of yoga for the back, shoulders and a full reset before the new week.",groups:[
@@ -335,10 +385,9 @@ const DAYS_B = {
    {id:"ht",n:"Barbell glute bridge",s:4,r:"6–10",pr:"5–8",plus:1,note:"On the floor, bar padded, drive through heels, squeeze 1 sec",q:"barbell glute bridge",kg:1,early:{n:"Dumbbell step-up (high box)",s:3,r:"8–10 each",note:"Box just below knee height. Push through the whole front foot, don't push off the back leg. Weaker side first",q:"dumbbell step up glutes"}},
    {id:"rdl",n:"Dumbbell Romanian deadlift",s:3,r:"8–10",plus:1,note:"Dumbbells close to the legs, hips back, flat back",q:"dumbbell romanian deadlift",kg:1,early:{n:"B-stance dumbbell RDL",r:"8–10 each",note:"Back toe lightly down for balance, most weight on the front leg",q:"b stance kickstand rdl dumbbell"}},
    {id:"fss",n:"Front-foot-elevated split squat",s:3,r:"8–12 each",note:"Front foot on a low plate, dumbbells in hands, sink deep",q:"front foot elevated split squat dumbbell",kg:1},
-   {id:"slbe",n:"Single-leg back extension",s:3,r:"10–12 each",note:"One foot hooked, squeeze the glute to come up",q:"single leg back extension glute",kg:1},
-   {id:"cabd",n:"Standing cable hip abduction",s:2,r:"15 each",note:"Light, slow, stand tall",q:"standing cable hip abduction",kg:1},
-   {id:"bd",n:"Bird dog",s:3,r:"8 each side",note:"Opposite arm and leg, hips level, 2-sec hold",q:"bird dog exercise"},
-   {id:"tib",n:"Tibialis raise",s:3,r:"15",note:"Back against a wall, heels forward, lift the toes up. Strengthens the front of the ankle",q:"tibialis raise wall"}]},
+   {id:"slbe",n:"Single-leg back extension",s:2,r:"10–12 each",note:"One foot hooked, squeeze the glute to come up",q:"single leg back extension glute",kg:1},
+   {ss:1,id:"bd",n:"Bird dog",s:3,r:"8 each side",note:"Opposite arm and leg, hips level, 2-sec hold",q:"bird dog exercise"},
+   {ss:1,id:"tib",n:"Tibialis raise",s:3,r:"15",note:"Back against a wall, heels forward, lift the toes up. Strengthens the front of the ankle",q:"tibialis raise wall"}]},
   {label:"Finisher · end cardio",items:[{id:"fin",n:"Bike, steady",rx:"10–15 min",keep:1,note:"Steady pace, moderate effort",q:"stationary bike workout steady"}]}
  ]},
  wed:{title:"Full body conditioning (B)",groups:[
@@ -346,8 +395,7 @@ const DAYS_B = {
   {label:"Part 1: strength",items:[
    {id:"hack",n:"Hack squat machine",s:3,r:"10–12",note:"Feet higher on the plate for glutes",q:"hack squat glute focus",kg:1,early:{n:"Dumbbell sumo squat",r:"10–12",note:"Wide stance, toes out, one heavy dumbbell between the legs",q:"dumbbell sumo squat"}},
    {id:"pt",n:"Cable pull-through",s:3,r:"12–15",note:"Face away from the cable, hinge and snap the hips forward",q:"cable pull through glutes",kg:1},
-   {id:"npd",n:"Neutral-grip lat pulldown",s:3,r:"10–12",note:"Palms facing, elbows to ribs",q:"neutral grip lat pulldown",kg:1,early:{n:"Half-kneeling single-arm pulldown",r:"10–12 each",note:"Kneel, one handle, pull elbow to hip. Core stays still",q:"half kneeling single arm lat pulldown"}},
-   {id:"inv",n:"Inverted row (Smith bar)",s:3,r:"8–10",note:"Body straight like a plank, pull chest to the bar. Higher bar = easier",q:"inverted row smith machine"}]},
+   {id:"npd",n:"Neutral-grip lat pulldown",s:3,r:"10–12",note:"Palms facing, elbows to ribs",q:"neutral grip lat pulldown",kg:1,early:{n:"Half-kneeling single-arm pulldown",r:"10–12 each",note:"Kneel, one handle, pull elbow to hip. Core stays still",q:"half kneeling single arm lat pulldown"}}]},
   {label:"Part 2: kettlebell circuit",circuit:1,items:[
    {id:"sasw",n:"Single-arm kettlebell swing",rx:"10 each arm",note:"Hips do the work. Don't let the shoulder get pulled forward",q:"single arm kettlebell swing",kg:1},
    {id:"kbsd",n:"Kettlebell sumo deadlift",rx:"12 reps",note:"Wide stance, flat back, squeeze at the top",q:"kettlebell sumo deadlift",kg:1},
@@ -355,8 +403,8 @@ const DAYS_B = {
    {id:"halo",n:"Kettlebell halo",rx:"8 each way",note:"Circle the bell round the head, ribs down",q:"kettlebell halo",kg:1},
    {id:"skt",n:"Skater steps",rx:"30 sec",note:"Side to side, land soft and hold balance a beat. Ankle stability",q:"skater steps low impact"}]},
   {label:"Core",items:[
-   {id:"hol",n:"Hollow hold",s:3,r:"20–30 sec",note:"Lower back glued down, bend knees to make it easier",q:"hollow body hold beginner"},
-   {id:"ybal",n:"Single-leg balance reach",s:2,r:"5 reaches each direction, each leg",note:"Stand on one leg, tap the other foot forward, side and back",q:"y balance exercise single leg reach"}]},
+   {id:"hol",n:"Hollow hold",s:2,r:"20–30 sec",note:"Lower back glued down, bend knees to make it easier",q:"hollow body hold beginner"},
+   {ss:1,id:"ybal",n:"Single-leg balance reach",s:2,r:"5 reaches each direction, each leg",note:"Stand on one leg, tap the other foot forward, side and back",q:"y balance exercise single leg reach"}]},
   {label:"Finisher · end cardio",items:[{id:"fin",n:"Step machine, easy",rx:"10 min",keep:1,note:"Cool-down pace",q:"stairmaster proper form"}]}
  ]},
  fri:{title:"Lower B: glute volume (B)",groups:[
@@ -365,10 +413,9 @@ const DAYS_B = {
    {id:"wl",n:"Dumbbell walking lunge",s:3,r:"10 each",pr:"8 each",note:"Long strides, slight forward lean",q:"dumbbell walking lunge glutes",kg:1},
    {id:"frog",n:"Dumbbell frog pump",s:3,r:"15–20",note:"Soles together, dumbbell on hips, short fast squeezes",q:"frog pump glutes dumbbell",kg:1},
    {id:"lsu",n:"Lateral step-up",s:3,r:"10 each",note:"Step up sideways onto a low box, control the way down. Knee and ankle stability",q:"lateral step up dumbbell",kg:1},
-   {id:"rhyp",n:"Reverse hyper on bench",s:3,r:"12–15",note:"Lie face down on a bench, lift both legs with the glutes, not the lower back",q:"reverse hyperextension on bench"},
    {id:"bhc",n:"Single-leg ball hamstring curl",s:2,r:"8–10 each",note:"Hips up, roll the ball in with one heel. Use both legs if too hard",q:"single leg stability ball hamstring curl"},
-   {id:"bear",n:"Bear hold with shoulder taps",s:3,r:"10 each side",note:"Knees just off the floor, hips still",q:"bear plank shoulder taps"},
-   {id:"htw",n:"Heel and toe walks",s:2,r:"20 m each",note:"Walk on heels, then on toes. Simple, great for weak ankles",q:"heel walk toe walk ankle strengthening"}]},
+   {ss:1,id:"bear",n:"Bear hold with shoulder taps",s:3,r:"10 each side",note:"Knees just off the floor, hips still",q:"bear plank shoulder taps"},
+   {ss:1,id:"htw",n:"Heel and toe walks",s:2,r:"20 m each",note:"Walk on heels, then on toes. Simple, great for weak ankles",q:"heel walk toe walk ankle strengthening"}]},
   {label:"Finisher · end cardio",items:[{id:"fin",n:"Step machine intervals",rx:"10 min",keep:1,note:"30 sec faster / 30 sec steady",q:"stairmaster interval workout"}]}
  ]},
  sat:{title:"Upper: back + core (B)",groups:[
@@ -376,12 +423,11 @@ const DAYS_B = {
   {label:"Main",items:[
    {id:"neg",n:"Assisted pull-up, slow lowering",s:3,r:"5–6",pr:"4–5",plus:1,note:"Use the machine or a band, take 3 sec to lower",q:"pull up negatives beginner",kg:1},
    {id:"scdr",n:"Chest-supported row",s:3,r:"8–12",plus:1,note:"Squeeze shoulder blades, pause 1 sec",q:"chest supported row machine",kg:1,early:{n:"Single-arm chest-supported dumbbell row",r:"10–12 each",note:"Face down on an incline bench, one arm at a time, weaker side first",q:"single arm chest supported dumbbell row"}},
-   {id:"pull",n:"Dumbbell pullover",s:3,r:"10–12",note:"Lying on a bench, arms long, stretch then pull over the chest",q:"dumbbell pullover lats",kg:1},
-   {id:"rfly",n:"Chest-supported reverse fly",s:3,r:"12–15",note:"Light dumbbells, lead with the elbows",q:"incline reverse dumbbell fly",kg:1},
+   {id:"rfly",n:"Chest-supported reverse fly",s:2,r:"12–15",note:"Light dumbbells, lead with the elbows",q:"incline reverse dumbbell fly",kg:1},
    {id:"hkp",n:"Half-kneeling single-arm press",s:2,r:"10 each",note:"Light dumbbell overhead, glute of the down knee squeezed, no leaning",q:"half kneeling single arm dumbbell press",kg:1},
-   {id:"wc",n:"Cable woodchop (high to low)",s:3,r:"10 each side",note:"Turn from the trunk, arms stay long",q:"cable woodchop high to low",kg:1},
-   {id:"rc",n:"Reverse crunch",s:3,r:"12",note:"Curl the hips off the floor, lower slowly",q:"reverse crunch proper form"},
-   {id:"smarch",n:"Suitcase march",s:3,r:"20 steps each side",note:"Dumbbell in one hand, march slowly lifting knees. Core and ankles",q:"suitcase march exercise"}]},
+   {ss:1,id:"wc",n:"Cable woodchop (high to low)",s:3,r:"10 each side",note:"Turn from the trunk, arms stay long",q:"cable woodchop high to low",kg:1},
+   {ss:1,id:"rc",n:"Reverse crunch",s:3,r:"12",note:"Curl the hips off the floor, lower slowly",q:"reverse crunch proper form"},
+   {id:"smarch",n:"Suitcase march",s:2,r:"20 steps each side",note:"Dumbbell in one hand, march slowly lifting knees. Core and ankles",q:"suitcase march exercise"}]},
   {label:"Finisher · end cardio",items:[{id:"fin",n:"Bike intervals",rx:"10 min",keep:1,note:"10 rounds: 20 sec hard / 40 sec easy. Deload weeks: steady",q:"bike sprint intervals"}]}
  ]},
  tue:{title:"Rest + yoga (B)",groups:[
@@ -423,7 +469,7 @@ const MAIN_LIFTS = {mon:["ht","rdl"], wed:["htm","lp"], fri:["sq","dht"], sat:["
     aItems.forEach(it=>it.main=1);
   }
 })();
-const isBWeek = w => w % 2 === 0;
+const isBWeek = w => posOf(w) % 2 === 1;
 function dayDef(w, dId){
   const base = DAYS.find(x=>x.id===dId);
   if(isBWeek(w) && DAYS_B[dId]) return Object.assign({}, base, DAYS_B[dId]);
@@ -448,7 +494,7 @@ function rxFor(it, w){
 const CHANGE_DATE = new Date(2026, 10, 10);
 const DAYIDX = {mon:0,tue:1,wed:2,thu:3,fri:4,sat:5,sun:6};
 const dayDateOf = (w,dId) => new Date(weekStart(w).getFullYear(), weekStart(w).getMonth(), weekStart(w).getDate() + DAYIDX[dId]);
-const showItem = (it,w,dId) => !it.since || dayDateOf(w,dId) >= new Date(it.since + "T00:00:00");
+const showItem = (it,w,dId) => (!it.since || dayDateOf(w,dId) >= new Date(it.since + "T00:00:00")) && (!it.until || dayDateOf(w,dId) <= new Date(it.until + "T00:00:00"));
 function variantItem(it, w, dId){
   if(it.alt && w>=17) return Object.assign({}, it, it.alt);
   if(it.early && w<=11 && dayDateOf(w,dId) >= CHANGE_DATE) return Object.assign({}, it, it.early);
@@ -461,16 +507,18 @@ const qFor = (it,w) => useAlt(it,w) ? it.alt.q : it.q;
 function groupLabel(g, w){
   if(!g.circuit) return g.label;
   const ph = phaseOf(w);
-  const rounds = (ph==="deload"||ph==="xmas") ? 2 : (ph==="found" ? 3 : 4);
+  const rounds = (ph==="deload"||ph==="xmas") ? 2 : 3;
   return g.label + " · " + rounds + " rounds, 90 sec rest between";
 }
 
 // ---------- state ----------
 const LS = "gcb-tracker-v1";
-let state = {week:1, marks:{}, flags:{}};
+let state = {week:1, marks:{}, flags:{}, pauses:[], checkins:{}};
 try{ const raw = localStorage.getItem(LS); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){}
 state.week = currentWeek();
 if(!state.flags || typeof state.flags!=="object") state.flags = {};
+if(!Array.isArray(state.pauses)) state.pauses = [];
+if(!state.checkins || typeof state.checkins!=="object") state.checkins = {};
 const isPeriod = (w,d) => state.flags[w+"|"+d]==="period";
 let curDay = (() => { const d = new Date().getDay(); return ["sun","mon","tue","wed","thu","fri","sat"][d]; })();
 const key = (w,d,i) => w+"|"+d+"|"+i;
@@ -506,13 +554,15 @@ const todayId = () => ["sun","mon","tue","wed","thu","fri","sat"][new Date().get
 function render(){
   const w = state.week, ph = phaseOf(w);
   $("home").hidden = view!=="home"; $("workout").hidden = view!=="workout";
-  $("wk").textContent = "Week " + w + " of " + TOTAL;
-  $("wkdates").textContent = fmt(weekStart(w)) + " – " + fmt(new Date(weekStart(w).getTime()+6*864e5)) + " · " + PHASES[ph].name;
-  $("wkmini").textContent = "Week " + w + (isBWeek(w)?" B":" A") + " · " + PHASES[ph].name;
-  $("prev").disabled = w<=1; $("next").disabled = w>=TOTAL;
+  const M = planMap(), pos = M.seq.indexOf(w);
+  $("wk").textContent = "Week " + (pos+1) + " of " + M.seq.length;
+  $("wkdates").textContent = fmt(weekStart(w)) + " – " + fmt(new Date(weekStart(w).getTime()+6*864e5)) + " · " + PHASES[phaseShown(w)].name;
+  renderPause(w); renderCheckin();
+  $("wkmini").textContent = "Week " + (posOf(w)+1) + (isBWeek(w)?" B":" A") + " · " + PHASES[phaseShown(w)].name;
+  $("prev").disabled = pos<=0; $("next").disabled = pos>=M.seq.length-1;
   const dl = daysLeft(); $("countdown").textContent = dl>0 ? dl+" days" : dl===0 ? "Today" : "Done";
-  $("phase").innerHTML = PHASES[ph].text;
-  $("planfill").style.width = Math.round(100*w/TOTAL) + "%";
+  $("phase").innerHTML = PHASES[phaseShown(w)].text;
+  $("planfill").style.width = Math.round(100*(pos+1)/M.seq.length) + "%";
   const wc = weekCounts(w);
   $("sDone").textContent = wc.done;
   $("sMiss").textContent = wc.miss;
@@ -555,7 +605,7 @@ function render(){
       const k = key(w,d.id,it.id), m = state.marks[k]||{};
       const cls = m.s==="d"?"done":m.s==="m"?"miss":m.s==="p"?"partial":"";
       h += `<div class="ex ${cls}">
-        <div class="top"><div class="name">${esc(nameFor(it,w))}${it.main?' <span class="mtag">Main lift</span>':""}</div><div class="rx">${esc(rxFor(it,w))}</div></div>
+        <div class="top"><div class="name">${esc(nameFor(it,w))}${it.main?' <span class="mtag">Main lift</span>':""}${it.ss?' <span class="sstag">Between sets</span>':""}</div><div class="rx">${esc(rxFor(it,w))}</div></div>
         <div class="note">${esc(noteFor(it,w))}</div>
         <div class="row">
           <a class="how" href="${yt(qFor(it,w))}" target="_blank" rel="noopener">▶ How to</a>
@@ -585,8 +635,11 @@ function setMark(id, s){
 
 document.addEventListener("click", e=>{
   const t = e.target.closest("button"); if(!t) return;
-  if(t.id==="prev" && state.week>1){ state.week--; persist(); render(); }
-  else if(t.id==="next" && state.week<TOTAL){ state.week++; persist(); render(); }
+  if(t.id==="prev" || t.id==="next"){ const M=planMap(), i=M.seq.indexOf(state.week)+(t.id==="next"?1:-1); if(i>=0 && i<M.seq.length){ state.week=M.seq[i]; persist(); render(); } }
+  else if(t.dataset.pause){ const c=+t.dataset.pause; if(!state.pauses.includes(c)) state.pauses.push(c); state.week=currentWeek(); persist(); render(); }
+  else if(t.dataset.unpause){ const c=+t.dataset.unpause; state.pauses=state.pauses.filter(x=>x!==c); state.week=currentWeek(); persist(); render(); }
+  else if(t.id==="ciSave"){ saveCheckin(); }
+  else if(t.id==="ciOpen"){ ciForceOpen=true; renderCheckin(); }
   else if(t.dataset.d){ curDay=t.dataset.d; render(); }
   else if(t.dataset.go){ curDay=t.dataset.go; view="workout"; render(); window.scrollTo(0,0); }
   else if(t.id==="goToday"){ curDay=todayId(); view="workout"; render(); window.scrollTo(0,0); }
@@ -737,7 +790,7 @@ function queueBackup(){
 async function backupNow(){
   if(!bkOn()) return;
   try{
-    await rpc("save_backup", {p_key: bkKey(), p_data: {marks: state.marks, flags: state.flags, saved: new Date().toISOString()}});
+    await rpc("save_backup", {p_key: bkKey(), p_data: {marks: state.marks, flags: state.flags, pauses: state.pauses, checkins: state.checkins, saved: new Date().toISOString()}});
     bkDirty = false;
     try{ localStorage.setItem(BK_AT_LS, new Date().toISOString()); }catch(e){}
   }catch(e){ /* offline or server issue: retried on next change or next open */ }
@@ -750,6 +803,8 @@ async function restoreFrom(code){
     if(!d || typeof d.marks!=="object"){ flash("No backup found for that code"); return; }
     state.marks = Object.assign({}, d.marks, state.marks);   // keeps anything already on this phone
     state.flags = Object.assign({}, d.flags||{}, state.flags);
+    state.checkins = Object.assign({}, d.checkins||{}, state.checkins);
+    state.pauses = Array.from(new Set([...(d.pauses||[]), ...state.pauses]));
     try{ localStorage.setItem(BK_KEY_LS, code); }catch(e){}
     persist(); render(); flash("Backup restored");
   }catch(e){ flash("Couldn't reach the backup. Try again with signal"); }
@@ -846,6 +901,78 @@ function partialUI(it, w, m){
     h += `What did you manage?<input data-pt="${it.id}" placeholder="e.g. 6 min, 700 m, 2 rounds" value="${esc(m.p||"")}">`;
   }
   return h + `</div>`;
+}
+
+
+// ---------- pause weeks ----------
+function renderPause(w){
+  const M = planMap(), tc = todayCal(), c = M.plan2cal[w];
+  let h = "";
+  if(M.cal2plan[tc]===0){
+    h += `<div class="pausecard on"><b>This week is paused</b><span>${fmt(calStart(tc))} – ${fmt(new Date(calStart(tc).getTime()+6*864e5))}. Rest up. Your plan picks up where you left off next week.</span><button data-unpause="${tc}">Resume now</button></div>`;
+  }
+  const future = M.P.filter(x=>x>tc).sort((a,b)=>a-b);
+  future.forEach(x=>{ h += `<div class="pausecard"><b>Paused: ${fmt(calStart(x))} – ${fmt(new Date(calStart(x).getTime()+6*864e5))}</b><button data-unpause="${x}">Undo</button></div>`; });
+  const started = Object.keys(state.marks).some(k=>k.startsWith(w+"|")) || Object.keys(state.flags).some(k=>k.startsWith(w+"|"));
+  if(c && c>=tc && !started && M.P.length < REMOVABLE.length && M.cal2plan[tc]!==0){
+    h += `<button class="pausebtn" data-pause="${c}">Pause this week (ill, away, Christmas)</button>`;
+  } else if(c && c>=tc && started && c<CAL_WEEKS && M.P.length < REMOVABLE.length){
+    h += `<button class="pausebtn" data-pause="${c+1}">Pause next week (ill, away, Christmas)</button>`;
+  }
+  if(M.P.length) h += `<p class="pnote2">${M.P.length} week${M.P.length>1?"s":""} paused. To still finish on 16 April, ${M.P.length>1?"those weeks are":"that week is"} taken out of the middle of a training block.</p>`;
+  $("pausebox").innerHTML = h;
+}
+
+// ---------- monthly check-ins ----------
+var ciForceOpen = false;
+var MONTHS = ["2026-11","2026-12","2027-01","2027-02","2027-03","2027-04"];
+var monthName = k => k==="start" ? "Starting point" : new Date(+k.slice(0,4), +k.slice(5)-1, 1).toLocaleDateString("en-GB",{month:"long"});
+function dueKey(){
+  if(!state.checkins.start) return "start";
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  const last = new Date(y, m+1, 0).getDate();
+  const k = y + "-" + String(m+1).padStart(2,"0");
+  if(k==="2027-04" && d>=13) return state.checkins[k] ? null : k;
+  if(d >= last-2 && MONTHS.includes(k) && !state.checkins[k]) return k;
+  if(d <= 5){ const pm = new Date(y, m-1, 1), pk = pm.getFullYear()+"-"+String(pm.getMonth()+1).padStart(2,"0");
+    if(MONTHS.includes(pk) && !state.checkins[pk]) return pk; }
+  return null;
+}
+function ciMonthNow(){ const now=new Date(); return now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0"); }
+function renderCheckin(){
+  const due = dueKey();
+  const formKey = due || (ciForceOpen ? (state.checkins.start ? ciMonthNow() : "start") : null);
+  const keys = ["start"].concat(MONTHS).filter(k=>state.checkins[k]);
+  const S = state.checkins.start || {};
+  const delta = (v, base) => { const a=num(v), b=num(base); if(a==null||b==null) return ""; const d=Math.round((a-b)*10)/10; return ` <i class="${d<0?"dn":d>0?"up":""}">${d>0?"+":""}${d}</i>`; };
+  let h = `<div class="cicard ${due?"due":""}"><div class="cihead"><b>Monthly check-in</b>`;
+  if(!formKey) h += `<button id="ciOpen" class="cilink">Log one now</button>`;
+  h += `</div>`;
+  if(formKey){
+    const v = state.checkins[formKey] || {};
+    h += `<p>${formKey==="start" ? "Record your starting point so you can see the change by April." : "Your <b>"+monthName(formKey)+"</b> check-in"+(due?" is due":"")+". Morning, before eating, same conditions each time."}</p>
+      <div class="cigrid">
+        <label>Weight (kg)<input id="ciW" inputmode="decimal" value="${esc(v.weight||"")}"></label>
+        <label>Waist (cm)<input id="ciWa" inputmode="decimal" value="${esc(v.waist||"")}"></label>
+        <label>Glutes (cm)<input id="ciG" inputmode="decimal" value="${esc(v.glutes||"")}"></label>
+      </div>
+      <label class="cichk"><input type="checkbox" id="ciP" ${v.photos?"checked":""}> Photos taken: front, side, back</label>
+      <button id="ciSave" data-key="${formKey}" class="cisave">Save check-in</button>`;
+  } else if(!keys.length){
+    h += `<p>Log your weight, waist and glute measurements and photos at the end of each month.</p>`;
+  }
+  if(keys.length){
+    h += `<table class="citab"><tr><th></th><th>Weight</th><th>Waist</th><th>Glutes</th></tr>`;
+    keys.forEach(k=>{ const v=state.checkins[k]; const base = k==="start"?null:S;
+      h += `<tr><td>${monthName(k)}</td><td>${esc(v.weight||"–")}${base?delta(v.weight,S.weight):""}</td><td>${esc(v.waist||"–")}${base?delta(v.waist,S.waist):""}</td><td>${esc(v.glutes||"–")}${base?delta(v.glutes,S.glutes):""}</td></tr>`; });
+    h += `</table><p class="cinote">Changes are against your starting point. Waist down and glutes holding or up is the goal; weight alone doesn't tell the whole story.</p>`;
+  }
+  $("checkin").innerHTML = h + `</div>`;
+}
+function saveCheckin(){
+  const k = $("ciSave").dataset.key;
+  state.checkins[k] = {weight:$("ciW").value.trim(), waist:$("ciWa").value.trim(), glutes:$("ciG").value.trim(), photos:$("ciP").checked, date:new Date().toISOString().slice(0,10)};
+  ciForceOpen = false; persist(); render(); flash("Check-in saved");
 }
 
 // ---------- completed-day celebration ----------

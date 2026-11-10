@@ -112,6 +112,12 @@ h1{font-size:20px;margin:4px 0 2px}
 .wtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .wtop button{border:0;background:none;color:var(--accent);font-size:15px;font-weight:600;cursor:pointer;padding:6px 0;min-height:38px}
 .wtop span{font-size:12.5px;color:var(--muted)}
+.admin{background:var(--card);border:1px solid var(--accent);border-radius:14px;padding:12px 14px;margin-top:10px;font-size:13.5px}
+.admin p{margin:4px 0;color:var(--muted)}
+.admin code{color:var(--accent);font-size:12px;word-break:break-all}
+.admin input{width:100%;font-size:16px;padding:8px;border-radius:8px;border:1px solid var(--line);background:#0f0f0f;color:var(--ink);margin:4px 0}
+.arow{display:flex;gap:6px;margin:6px 0}
+.arow button{flex:1;border:1px solid var(--line);background:#0f0f0f;color:var(--ink);border-radius:8px;padding:8px;font-size:13.5px;min-height:38px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -141,7 +147,16 @@ h1{font-size:20px;margin:4px 0 2px}
   <div class="group">This week</div>
   <div id="weeklist"></div>
   <button class="go" id="goToday">Start today's workout</button>
-  <p class="foot">Progress saves on this phone. Always open it from the Home Screen icon.</p>
+  <p class="foot" id="foot">Progress saves on this phone. Always open it from the Home Screen icon.</p>
+  <div class="admin" id="admin" hidden>
+    <b>Backup</b>
+    <p id="bkStatus">Not set up.</p>
+    <p>Backup code: <code id="bkKey"></code></p>
+    <div class="arow"><button id="bkNow">Back up now</button><button id="bkCopyKey">Copy code</button></div>
+    <p>Restore from a backup code (new phone or cleared data):</p>
+    <input id="bkIn" placeholder="Paste backup code" autocomplete="off" autocapitalize="off">
+    <div class="arow"><button id="bkRestore">Restore</button></div>
+  </div>
  </section>
 
  <section id="workout" hidden>
@@ -285,6 +300,7 @@ function persist(){
   try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){}
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>flash("Saved"), 400);
+  if(typeof queueBackup==="function") queueBackup();
 }
 function flash(t){ const s=document.getElementById("save"); s.textContent=t; s.classList.add("show"); clearTimeout(flash.t); flash.t=setTimeout(()=>s.classList.remove("show"),1200); }
 
@@ -481,6 +497,73 @@ document.getElementById("banner").addEventListener("click", ()=>{ showBanner(bId
 render();
 
 
+
+// ---------- automatic cloud backup (Supabase) ----------
+// Fill these two in from Supabase: Project Settings -> API. Leave blank to switch backup off.
+const SUPABASE_URL = "";
+const SUPABASE_ANON_KEY = "";
+const BK_KEY_LS = "gcb-backup-key", BK_AT_LS = "gcb-backup-at";
+const bkOn = () => !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+function bkKey(){
+  let k = null; try{ k = localStorage.getItem(BK_KEY_LS); }catch(e){}
+  if(!k){
+    k = (crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join(""));
+    try{ localStorage.setItem(BK_KEY_LS, k); }catch(e){}
+  }
+  return k;
+}
+async function rpc(fn, body){
+  const r = await fetch(SUPABASE_URL.replace(/\/$/,"") + "/rest/v1/rpc/" + fn, {
+    method:"POST",
+    headers:{"Content-Type":"application/json","apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY},
+    body: JSON.stringify(body)
+  });
+  if(!r.ok) throw new Error("backup " + r.status);
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+let bkTimer = null, bkDirty = false;
+function queueBackup(){
+  if(!bkOn()) return;
+  bkDirty = true; clearTimeout(bkTimer); bkTimer = setTimeout(backupNow, 2000);
+}
+async function backupNow(){
+  if(!bkOn()) return;
+  try{
+    await rpc("save_backup", {p_key: bkKey(), p_data: {marks: state.marks, saved: new Date().toISOString()}});
+    bkDirty = false;
+    try{ localStorage.setItem(BK_AT_LS, new Date().toISOString()); }catch(e){}
+  }catch(e){ /* offline or server issue: retried on next change or next open */ }
+  showAdmin();
+}
+async function restoreFrom(code){
+  code = (code||"").trim(); if(!code || !bkOn()) return;
+  try{
+    const d = await rpc("get_backup", {p_key: code});
+    if(!d || typeof d.marks!=="object"){ flash("No backup found for that code"); return; }
+    state.marks = Object.assign({}, d.marks, state.marks);   // keeps anything already on this phone
+    try{ localStorage.setItem(BK_KEY_LS, code); }catch(e){}
+    persist(); render(); flash("Backup restored");
+  }catch(e){ flash("Couldn't reach the backup. Try again with signal"); }
+}
+function showAdmin(){
+  $("bkKey").textContent = bkKey();
+  let at = null; try{ at = localStorage.getItem(BK_AT_LS); }catch(e){}
+  $("bkStatus").textContent = !bkOn() ? "Backup not set up yet (Supabase details missing)."
+    : at ? "Last backed up " + new Date(at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) + "."
+    : "Not backed up yet.";
+}
+// hidden panel: tap the footer text 5 times
+let tapN = 0, tapT = null;
+$("foot").addEventListener("click", ()=>{
+  tapN++; clearTimeout(tapT); tapT = setTimeout(()=>tapN=0, 1500);
+  if(tapN>=5){ tapN=0; $("admin").hidden = !$("admin").hidden; showAdmin(); }
+});
+$("bkNow").addEventListener("click", ()=>{ backupNow().then(()=>flash(bkOn()?"Backed up":"Backup not set up")); });
+$("bkCopyKey").addEventListener("click", async ()=>{ try{ await navigator.clipboard.writeText(bkKey()); flash("Code copied"); }catch(e){ flash("Select and copy the code"); } });
+$("bkRestore").addEventListener("click", ()=>restoreFrom($("bkIn").value));
+// back up on open (catches day-one data and anything missed offline) and when the app is put away
+if(bkOn()) setTimeout(backupNow, 1500);
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden" && bkDirty) backupNow(); });
 </script>
 </body>
 </html>

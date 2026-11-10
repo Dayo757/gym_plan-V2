@@ -184,7 +184,7 @@ function daysLeft(){
 // type: lift (sets x reps) | text (prescription string)
 const DAYS = [
  {id:"mon",tab:"Mon",title:"Lower A: heavy glutes",sub:"Rest 2–3 min on the first two lifts, 60–90 sec on the rest.",groups:[
-  {label:"Warm-up · 10 min cardio",items:[{id:"wu",n:"Bike 5 min + rower 5 min",rx:"10 min",keep:1,note:"Easy pace, building up. Should be warm and slightly out of breath, not tired",q:"gym warm up bike rowing machine"},{id:"act",n:"Glute activation",rx:"2 rounds",note:"10 glute bridges + 10 band walks each way",q:"glute activation band walks glute bridge"}]},
+  {label:"Warm-up · cardio",items:[{id:"wu",n:"Bike 5 min + 1000 m row",rx:"5 min + 1000 m",keep:1,note:"Bike easy, then row at a steady pace (about 5 min). Warm and slightly out of breath, not tired. Note your row time and try to beat it",q:"gym warm up bike rowing machine"},{id:"act",n:"Glute activation",rx:"2 rounds",note:"10 glute bridges + 10 band walks each way",q:"glute activation band walks glute bridge"}]},
   {label:"Main",items:[
    {id:"ht",n:"Barbell hip thrust",s:4,r:"6–10",pr:"5–8",plus:1,note:"1-sec squeeze at top, chin tucked, ribs down",q:"barbell hip thrust",kg:1},
    {id:"rdl",n:"Romanian deadlift",s:3,r:"8–10",plus:1,note:"Hips back, soft knees, bar close to legs",q:"romanian deadlift",kg:1},
@@ -198,7 +198,7 @@ const DAYS = [
   {label:"Optional",items:[{id:"walk",n:"Walk",rx:"Easy, any length",note:"Aim for 8,000–10,000 steps",q:"benefits of walking for fat loss"}]}
  ]},
  {id:"wed",tab:"Wed",title:"Full body conditioning: machines + kettlebells",sub:"Part 1 strength (~20 min), Part 2 circuit (~20 min).",groups:[
-  {label:"Warm-up · 10 min cardio",items:[{id:"wu",n:"Rower 5 min + bike 5 min",rx:"10 min",keep:1,note:"Easy pace, building up",q:"rowing machine warm up"}]},
+  {label:"Warm-up · cardio",items:[{id:"wu",n:"1000 m row + bike 5 min",rx:"1000 m + 5 min",keep:1,note:"Row at a steady pace, then easy bike. Note your row time",q:"rowing machine warm up"}]},
   {label:"Part 1: machines",items:[
    {id:"htm",n:"Hip thrust machine",s:3,r:"10–12",note:"Second glute hit of the week",q:"hip thrust machine",kg:1},
    {id:"lp",n:"Leg press, feet high and wide",s:3,r:"10–12",note:"Higher feet shift work to glutes",q:"leg press glute focus feet high",kg:1},
@@ -219,7 +219,7 @@ const DAYS = [
   {label:"Cardio",items:[{id:"c1",n:"Stair climber, incline walk or cross-trainer",rx:"30–45 min",note:"Steady, moderate effort. Swap machines halfway if it gets boring",q:"stairmaster workout beginner"}]}
  ]},
  {id:"fri",tab:"Fri",title:"Lower B: glute volume",sub:"Rest 2 min on the first two, 60–90 sec on the rest.",groups:[
-  {label:"Warm-up · 10 min cardio",items:[{id:"wu",n:"Step machine 5 min + bike 5 min",rx:"10 min",keep:1,note:"Easy pace, building up",q:"stairmaster warm up"},{id:"act",n:"Glute activation",rx:"2 rounds",note:"10 glute bridges + 10 band walks each way",q:"glute activation band walks glute bridge"}]},
+  {label:"Warm-up · cardio",items:[{id:"wu",n:"Step machine 5 min + bike 5 min",rx:"10 min",keep:1,note:"Easy pace, building up",q:"stairmaster warm up"},{id:"act",n:"Glute activation",rx:"2 rounds",note:"10 glute bridges + 10 band walks each way",q:"glute activation band walks glute bridge"}]},
   {label:"Main",items:[
    {id:"sq",n:"Smith machine or goblet squat",s:3,r:"8–12",pr:"6–8",note:"Feet slightly wide, sit back and down",q:"smith machine squat glutes",kg:1},
    {id:"dht",n:"Dumbbell hip thrust or glute bridge",s:3,r:"12–15",note:"Lighter, higher reps than Monday",q:"dumbbell hip thrust",kg:1},
@@ -230,7 +230,7 @@ const DAYS = [
   {label:"Finisher · end cardio",items:[{id:"fin",n:"Bike intervals",rx:"10 min",keep:1,note:"10 rounds: 20 sec hard / 40 sec easy. Deload weeks: steady instead",q:"bike sprint intervals"}]}
  ]},
  {id:"sat",tab:"Sat",title:"Upper: back + core",sub:"Rest 2 min on the first two, 60–90 sec on the rest.",groups:[
-  {label:"Warm-up · 10 min cardio",items:[{id:"wu",n:"Bike 5 min + rower 5 min",rx:"10 min",keep:1,note:"Easy pace. The rower warms up the back for pulldowns",q:"gym warm up bike rowing machine"}]},
+  {label:"Warm-up · cardio",items:[{id:"wu",n:"Bike 5 min + 1000 m row",rx:"5 min + 1000 m",keep:1,note:"Steady pace. The row warms up the back for pulldowns",q:"gym warm up bike rowing machine"}]},
   {label:"Main",items:[
    {id:"pd",n:"Lat pulldown",s:4,r:"8–12",pr:"6–8",plus:1,note:"Pull elbows down to ribs",q:"lat pulldown",kg:1},
    {id:"csr",n:"Chest-supported row",s:3,r:"8–12",plus:1,note:"Squeeze shoulder blades, pause 1 sec",q:"chest supported row",kg:1},
@@ -240,7 +240,7 @@ const DAYS = [
    {id:"dbb",n:"Dumbbell bench press",s:2,r:"10–12",note:"Balances the pulling",q:"dumbbell bench press",kg:1},
    {id:"pp",n:"Pallof press",s:3,r:"10 each side",note:"Resist the cable twisting you",q:"pallof press",kg:1},
    {id:"hkr",n:"Hanging knee raise",s:3,r:"8–12",note:"Curl the pelvis up, no swinging",q:"hanging knee raise"}]},
-  {label:"Finisher · end cardio",items:[{id:"fin",n:"Rower 5 min + step machine 5 min",rx:"10 min",keep:1,note:"Rower: legs, lean back, then pull. Steady pace on both",q:"rowing machine technique"}]}
+  {label:"Finisher · end cardio",items:[{id:"fin",n:"1000 m row + step machine 5 min",rx:"1000 m + 5 min",keep:1,note:"Row hard but controlled: legs, lean back, then pull. Note your time and try to beat it each week",q:"rowing machine technique"}]}
  ]},
  {id:"sun",tab:"Sun",title:"Rest",rest:1,sub:"Recovery day.",groups:[
   {label:"Optional",items:[{id:"walk",n:"Walk",rx:"Easy, any length",note:"Aim for 8,000–10,000 steps",q:"benefits of walking for fat loss"}]}

@@ -320,6 +320,97 @@ const DAYS = [
   {label:"Optional",items:[{id:"walk",n:"Walk",rx:"Easy, any length",note:"Aim for 8,000–10,000 steps",q:"benefits of walking for fat loss"}]}
  ]}
 ];
+// ---------- B weeks (even weeks): different exercises on each day from the week before ----------
+const DAYS_B = {
+ mon:{title:"Lower A: heavy glutes (B)",groups:[
+  {label:"Warm-up · cardio",items:[{id:"wu",n:"Step machine 5 min + 1000 m row",rx:"5 min + 1000 m",keep:1,note:"Easy step, then a steady row. Note your row time",q:"stairmaster warm up"},{id:"act",n:"Glute activation",rx:"2 rounds",note:"10 glute bridges + 10 band walks each way + 10 ankle circles each way",q:"glute activation band walks glute bridge"}]},
+  {label:"Main",items:[
+   {id:"ht",n:"Barbell glute bridge",s:4,r:"6–10",pr:"5–8",plus:1,note:"On the floor, bar padded, drive through heels, squeeze 1 sec",q:"barbell glute bridge",kg:1,early:{n:"Dumbbell step-up (high box)",s:3,r:"8–10 each",note:"Box just below knee height. Push through the whole front foot, don't push off the back leg. Weaker side first",q:"dumbbell step up glutes"}},
+   {id:"rdl",n:"Dumbbell Romanian deadlift",s:3,r:"8–10",plus:1,note:"Dumbbells close to the legs, hips back, flat back",q:"dumbbell romanian deadlift",kg:1,early:{n:"B-stance dumbbell RDL",r:"8–10 each",note:"Back toe lightly down for balance, most weight on the front leg",q:"b stance kickstand rdl dumbbell"}},
+   {id:"fss",n:"Front-foot-elevated split squat",s:3,r:"8–12 each",note:"Front foot on a low plate, dumbbells in hands, sink deep",q:"front foot elevated split squat dumbbell",kg:1},
+   {id:"slbe",n:"Single-leg back extension",s:3,r:"10–12 each",note:"One foot hooked, squeeze the glute to come up",q:"single leg back extension glute",kg:1},
+   {id:"cabd",n:"Standing cable hip abduction",s:2,r:"15 each",note:"Light, slow, stand tall",q:"standing cable hip abduction",kg:1},
+   {id:"bd",n:"Bird dog",s:3,r:"8 each side",note:"Opposite arm and leg, hips level, 2-sec hold",q:"bird dog exercise"},
+   {id:"tib",n:"Tibialis raise",s:3,r:"15",note:"Back against a wall, heels forward, lift the toes up. Strengthens the front of the ankle",q:"tibialis raise wall"}]},
+  {label:"Finisher · end cardio",items:[{id:"fin",n:"Bike, steady",rx:"10–15 min",keep:1,note:"Steady pace, moderate effort",q:"stationary bike workout steady"}]}
+ ]},
+ wed:{title:"Full body conditioning (B)",groups:[
+  {label:"Warm-up · cardio",items:[{id:"wu",n:"Bike 5 min + 1000 m row",rx:"5 min + 1000 m",keep:1,note:"Easy bike, steady row",q:"gym warm up bike rowing machine"}]},
+  {label:"Part 1: strength",items:[
+   {id:"hack",n:"Hack squat machine",s:3,r:"10–12",note:"Feet higher on the plate for glutes",q:"hack squat glute focus",kg:1,early:{n:"Dumbbell sumo squat",r:"10–12",note:"Wide stance, toes out, one heavy dumbbell between the legs",q:"dumbbell sumo squat"}},
+   {id:"pt",n:"Cable pull-through",s:3,r:"12–15",note:"Face away from the cable, hinge and snap the hips forward",q:"cable pull through glutes",kg:1},
+   {id:"npd",n:"Neutral-grip lat pulldown",s:3,r:"10–12",note:"Palms facing, elbows to ribs",q:"neutral grip lat pulldown",kg:1,early:{n:"Half-kneeling single-arm pulldown",r:"10–12 each",note:"Kneel, one handle, pull elbow to hip. Core stays still",q:"half kneeling single arm lat pulldown"}},
+   {id:"inv",n:"Inverted row (Smith bar)",s:3,r:"8–10",note:"Body straight like a plank, pull chest to the bar. Higher bar = easier",q:"inverted row smith machine"}]},
+  {label:"Part 2: kettlebell circuit",circuit:1,items:[
+   {id:"sasw",n:"Single-arm kettlebell swing",rx:"10 each arm",note:"Hips do the work. Don't let the shoulder get pulled forward",q:"single arm kettlebell swing",kg:1},
+   {id:"kbsd",n:"Kettlebell sumo deadlift",rx:"12 reps",note:"Wide stance, flat back, squeeze at the top",q:"kettlebell sumo deadlift",kg:1},
+   {id:"kbss",n:"Kettlebell split squat",rx:"8 each",note:"Bell held at the chest",q:"kettlebell goblet split squat",kg:1},
+   {id:"halo",n:"Kettlebell halo",rx:"8 each way",note:"Circle the bell round the head, ribs down",q:"kettlebell halo",kg:1},
+   {id:"skt",n:"Skater steps",rx:"30 sec",note:"Side to side, land soft and hold balance a beat. Ankle stability",q:"skater steps low impact"}]},
+  {label:"Core",items:[
+   {id:"hol",n:"Hollow hold",s:3,r:"20–30 sec",note:"Lower back glued down, bend knees to make it easier",q:"hollow body hold beginner"},
+   {id:"ybal",n:"Single-leg balance reach",s:2,r:"5 reaches each direction, each leg",note:"Stand on one leg, tap the other foot forward, side and back",q:"y balance exercise single leg reach"}]},
+  {label:"Finisher · end cardio",items:[{id:"fin",n:"Step machine, easy",rx:"10 min",keep:1,note:"Cool-down pace",q:"stairmaster proper form"}]}
+ ]},
+ fri:{title:"Lower B: glute volume (B)",groups:[
+  {label:"Warm-up · cardio",items:[{id:"wu",n:"1000 m row + bike 5 min",rx:"1000 m + 5 min",keep:1,note:"Steady row, easy bike",q:"rowing machine warm up"},{id:"act",n:"Glute activation",rx:"2 rounds",note:"10 glute bridges + 10 band walks each way + 10 ankle circles each way",q:"glute activation band walks glute bridge"}]},
+  {label:"Main",items:[
+   {id:"wl",n:"Dumbbell walking lunge",s:3,r:"10 each",pr:"8 each",note:"Long strides, slight forward lean",q:"dumbbell walking lunge glutes",kg:1},
+   {id:"frog",n:"Dumbbell frog pump",s:3,r:"15–20",note:"Soles together, dumbbell on hips, short fast squeezes",q:"frog pump glutes dumbbell",kg:1},
+   {id:"lsu",n:"Lateral step-up",s:3,r:"10 each",note:"Step up sideways onto a low box, control the way down. Knee and ankle stability",q:"lateral step up dumbbell",kg:1},
+   {id:"rhyp",n:"Reverse hyper on bench",s:3,r:"12–15",note:"Lie face down on a bench, lift both legs with the glutes, not the lower back",q:"reverse hyperextension on bench"},
+   {id:"bhc",n:"Single-leg ball hamstring curl",s:2,r:"8–10 each",note:"Hips up, roll the ball in with one heel. Use both legs if too hard",q:"single leg stability ball hamstring curl"},
+   {id:"bear",n:"Bear hold with shoulder taps",s:3,r:"10 each side",note:"Knees just off the floor, hips still",q:"bear plank shoulder taps"},
+   {id:"htw",n:"Heel and toe walks",s:2,r:"20 m each",note:"Walk on heels, then on toes. Simple, great for weak ankles",q:"heel walk toe walk ankle strengthening"}]},
+  {label:"Finisher · end cardio",items:[{id:"fin",n:"Step machine intervals",rx:"10 min",keep:1,note:"30 sec faster / 30 sec steady",q:"stairmaster interval workout"}]}
+ ]},
+ sat:{title:"Upper: back + core (B)",groups:[
+  {label:"Warm-up · cardio",items:[{id:"wu",n:"Step machine 5 min + 1000 m row",rx:"5 min + 1000 m",keep:1,note:"Easy step, steady row to warm up the back",q:"rowing machine technique"}]},
+  {label:"Main",items:[
+   {id:"neg",n:"Assisted pull-up, slow lowering",s:3,r:"5–6",pr:"4–5",plus:1,note:"Use the machine or a band, take 3 sec to lower",q:"pull up negatives beginner",kg:1},
+   {id:"scdr",n:"Chest-supported row",s:3,r:"8–12",plus:1,note:"Squeeze shoulder blades, pause 1 sec",q:"chest supported row machine",kg:1,early:{n:"Single-arm chest-supported dumbbell row",r:"10–12 each",note:"Face down on an incline bench, one arm at a time, weaker side first",q:"single arm chest supported dumbbell row"}},
+   {id:"pull",n:"Dumbbell pullover",s:3,r:"10–12",note:"Lying on a bench, arms long, stretch then pull over the chest",q:"dumbbell pullover lats",kg:1},
+   {id:"rfly",n:"Chest-supported reverse fly",s:3,r:"12–15",note:"Light dumbbells, lead with the elbows",q:"incline reverse dumbbell fly",kg:1},
+   {id:"hkp",n:"Half-kneeling single-arm press",s:2,r:"10 each",note:"Light dumbbell overhead, glute of the down knee squeezed, no leaning",q:"half kneeling single arm dumbbell press",kg:1},
+   {id:"wc",n:"Cable woodchop (high to low)",s:3,r:"10 each side",note:"Turn from the trunk, arms stay long",q:"cable woodchop high to low",kg:1},
+   {id:"rc",n:"Reverse crunch",s:3,r:"12",note:"Curl the hips off the floor, lower slowly",q:"reverse crunch proper form"},
+   {id:"smarch",n:"Suitcase march",s:3,r:"20 steps each side",note:"Dumbbell in one hand, march slowly lifting knees. Core and ankles",q:"suitcase march exercise"}]},
+  {label:"Finisher · end cardio",items:[{id:"fin",n:"Bike intervals",rx:"10 min",keep:1,note:"10 rounds: 20 sec hard / 40 sec easy. Deload weeks: steady",q:"bike sprint intervals"}]}
+ ]},
+ tue:{title:"Rest + yoga (B)",groups:[
+  {label:"Yoga · hips & glutes flow B · ~15 min",items:[
+   {id:"y1",n:"Downward dog",rx:"1 min",keep:1,note:"Pedal the feet, long spine",q:"downward dog beginners"},
+   {id:"y2",n:"Low lunge twist",rx:"45 sec each side",keep:1,note:"Back knee down, hand on the floor, twist open",q:"low lunge twist yoga"},
+   {id:"y3",n:"Lizard pose",rx:"45 sec each side",keep:1,note:"Both hands inside the front foot, hips sink",q:"lizard pose yoga beginners"},
+   {id:"y4",n:"90/90 hip switches",rx:"1 min",keep:1,note:"Sitting, both knees bent at 90°, rotate side to side slowly",q:"90 90 hip switch"},
+   {id:"y5",n:"Frog pose",rx:"1 min",keep:1,note:"Knees wide on a mat, rock gently back",q:"frog pose yoga"},
+   {id:"y6",n:"Seated figure-4 fold",rx:"1 min each side",keep:1,note:"Ankle over knee, fold forward gently",q:"seated figure four stretch"},
+   {id:"y7",n:"Bridge holds",rx:"3 × 20 sec",keep:1,note:"Gentle glute squeeze, keeps the hips moving",q:"bridge pose yoga"},
+   {id:"y8",n:"Reclined hamstring stretch",rx:"45 sec each side",keep:1,note:"On your back, towel round the foot",q:"reclined hand to big toe pose strap"},
+   {id:"y9",n:"Savasana",rx:"2 min",keep:1,note:"Lie still and breathe",q:"savasana yoga"}]},
+  {label:"Optional",items:[{id:"walk",n:"Walk",rx:"Easy, any length",note:"Aim for 8,000–10,000 steps",q:"benefits of walking for fat loss"}]}
+ ]},
+ sun:{title:"Rest + yoga (B)",groups:[
+  {label:"Yoga · spine & shoulders flow B · ~15 min",items:[
+   {id:"y1",n:"Child's pose side reach",rx:"45 sec each side",keep:1,note:"Walk both hands to one side to stretch the side body",q:"child's pose side stretch"},
+   {id:"y2",n:"Cat-cow",rx:"1 min",keep:1,note:"Slow, move with your breath",q:"cat cow yoga"},
+   {id:"y3",n:"Eagle arms",rx:"45 sec each side",keep:1,note:"Wrap the arms, lift the elbows, opens between the shoulder blades",q:"eagle arms stretch"},
+   {id:"y4",n:"Cobra",rx:"3 × 20 sec",keep:1,note:"Low and gentle, shoulders away from ears",q:"cobra pose beginners"},
+   {id:"y5",n:"Locust",rx:"3 × 15 sec",keep:1,note:"Face down, lift chest and legs slightly. Strengthens the back",q:"locust pose yoga"},
+   {id:"y6",n:"Wide-leg forward fold",rx:"1 min",keep:1,note:"Hands to the floor or blocks, let the head hang",q:"wide leg forward fold yoga"},
+   {id:"y7",n:"Seated twist",rx:"45 sec each side",keep:1,note:"Sit tall first, then twist",q:"seated spinal twist yoga"},
+   {id:"y8",n:"Supported fish",rx:"2 min",keep:1,note:"Block or cushion under the upper back, arms open",q:"supported fish pose block"},
+   {id:"y9",n:"Legs up the wall",rx:"2 min",keep:1,note:"Breathe and reset for the week",q:"legs up the wall yoga"}]},
+  {label:"Optional",items:[{id:"walk",n:"Walk",rx:"Easy, any length",note:"Aim for 8,000–10,000 steps",q:"benefits of walking for fat loss"}]}
+ ]}
+};
+const isBWeek = w => w % 2 === 0;
+function dayDef(w, dId){
+  const base = DAYS.find(x=>x.id===dId);
+  if(isBWeek(w) && DAYS_B[dId]) return Object.assign({}, base, DAYS_B[dId]);
+  return base;
+}
+
 
 function rxFor(it, w){
   const ph = phaseOf(w);
@@ -375,7 +466,7 @@ function persist(){
 function flash(t){ const s=document.getElementById("save"); s.textContent=t; s.classList.add("show"); clearTimeout(flash.t); flash.t=setTimeout(()=>s.classList.remove("show"),1200); }
 
 // ---------- stats ----------
-function dayItems(d, w){ return d.groups.flatMap(g=>g.items).filter(it=> w==null || showItem(it,w,d.id)); }
+function dayItems(d, w){ const dd = w==null ? d : dayDef(w, d.id); return dd.groups.flatMap(g=>g.items).filter(it=> w==null || showItem(it,w,d.id)); }
 function dayCounts(w, d){
   let done=0, miss=0, part=0, tot=0;
   dayItems(d,w).forEach(it=>{ tot++; const m=state.marks[key(w,d.id,it.id)]; if(m&&m.s==="d")done++; else if(m&&m.s==="m")miss++; else if(m&&m.s==="p")part++; });
@@ -398,7 +489,7 @@ function render(){
   $("home").hidden = view!=="home"; $("workout").hidden = view!=="workout";
   $("wk").textContent = "Week " + w + " of " + TOTAL;
   $("wkdates").textContent = fmt(weekStart(w)) + " – " + fmt(new Date(weekStart(w).getTime()+6*864e5)) + " · " + PHASES[ph].name;
-  $("wkmini").textContent = "Week " + w + " · " + PHASES[ph].name;
+  $("wkmini").textContent = "Week " + w + (isBWeek(w)?" B":" A") + " · " + PHASES[ph].name;
   $("prev").disabled = w<=1; $("next").disabled = w>=TOTAL;
   const dl = daysLeft(); $("countdown").textContent = dl>0 ? dl+" days" : dl===0 ? "Today" : "Done";
   $("phase").innerHTML = PHASES[ph].text;
@@ -413,13 +504,13 @@ function render(){
     const c=dayCounts(w,d);
     let st="Not started", cls="";
     const todayP = isThisWeek && d.id===todayId();
-    if(isPeriod(w,d.id)){ return `<button class="wrow period" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">${esc(d.title)}${todayP?" · today":""}</span><span class="st period">Period · skipped</span></button>`; }
+    if(isPeriod(w,d.id)){ return `<button class="wrow period" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">${esc(dayDef(w,d.id).title)}${todayP?" · today":""}</span><span class="st period">Period · skipped</span></button>`; }
     if(d.rest){ return `<button class="wrow" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">Rest + yoga${(isThisWeek && d.id===todayId())?" · today":""}</span><span class="st">Rest day</span></button>`; }
     if(c.done===c.tot){st="Done";cls="full";}
     else if(c.miss===c.tot){st="Missed";cls="miss";}
     else if(c.done+c.miss+c.part>0){st=c.done+"/"+c.tot+" done"+(c.part?" · "+c.part+" partial":"");cls="part";}
     const today = isThisWeek && d.id===todayId();
-    return `<button class="wrow ${today?"today":""} ${cls==="full"?"complete":""}" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">${esc(d.title)}${today?" · today":""}</span><span class="st ${cls}">${st}</span></button>`;
+    return `<button class="wrow ${today?"today":""} ${cls==="full"?"complete":""}" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">${esc(dayDef(w,d.id).title)}${today?" · today":""}</span><span class="st ${cls}">${st}</span></button>`;
   }).join("");
   if(view!=="workout"){ if(typeof stopBanner==="function") stopBanner(); return; }
 
@@ -429,7 +520,7 @@ function render(){
     return `<button class="tab ${d.id===curDay?"on":""} ${comp?"complete":""} ${isPeriod(w,d.id)?"period":""}" data-d="${d.id}"><span class="dot ${cls}"></span>${d.tab}</button>`;
   }).join("");
 
-  const d = DAYS.find(x=>x.id===curDay);
+  const d = dayDef(w, curDay);
   const per = isPeriod(w,d.id);
   const dc = dayCounts(w,d), dayDone = !d.rest && !per && dc.done===dc.tot;
   $("day").className = dayDone ? "complete" : (per ? "periodday" : "");

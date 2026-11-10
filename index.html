@@ -157,7 +157,7 @@ h1{font-size:20px;margin:4px 0 2px}
 .last div+div{margin-top:3px}
 .last .lt{font-size:11.5px;opacity:.85}
 .use{margin-left:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:7px;padding:3px 8px;font-size:12px;cursor:pointer}
-.kg.reps{width:70px}
+.kg.reps{width:118px}
 .sstag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:5px;padding:0 5px;margin-left:6px;vertical-align:2px}
 .pausebtn{width:100%;margin:0 0 12px;border:1px dashed var(--line);background:transparent;color:var(--muted);border-radius:10px;padding:9px;font-size:13px;cursor:pointer;min-height:40px}
 .pausecard{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13.5px}
@@ -192,6 +192,7 @@ h1{font-size:20px;margin:4px 0 2px}
 .cientry.due{border-color:var(--accent)}
 .sub2{color:var(--muted);font-size:13.5px;margin:0 0 14px}
 #cipage .cihead b{display:none}
+.fail{font-size:12px;font-weight:600;color:var(--gold-hi);margin:-4px 0 8px}
 </style>
 </head>
 <body>
@@ -621,9 +622,10 @@ function render(){
       h += `<div class="ex ${cls}">
         <div class="top"><div class="name">${esc(nameFor(it,w))}${it.main?' <span class="mtag">Main lift</span>':""}${it.ss?' <span class="sstag">Between sets</span>':""}</div><div class="rx">${esc(rxFor(it,w))}</div></div>
         <div class="note">${esc(noteFor(it,w))}</div>
+        ${failLabel(it,w)}
         <div class="row">
           <a class="how" href="${yt(qFor(it,w))}" target="_blank" rel="noopener">▶ How to</a>
-          ${it.kg?`<input class="kg" inputmode="decimal" placeholder="kg" data-kg="${it.id}" data-n="${esc(it.n)}" value="${esc(m.kg||"")}"><input class="kg reps" inputmode="numeric" placeholder="reps" data-reps="${it.id}" value="${esc(m.reps||"")}" aria-label="Reps on last set">`:""}
+          ${it.kg?`<input class="kg" inputmode="decimal" placeholder="kg" data-kg="${it.id}" data-n="${esc(it.n)}" value="${esc(m.kg||"")}"><input class="kg reps" inputmode="numeric" placeholder="reps (last set)" data-reps="${it.id}" value="${esc(m.reps||"")}" aria-label="Reps on last set">`:""}
         </div>
         ${lastUI(it, w, d.id, m)}
         <div class="marks">
@@ -905,6 +907,17 @@ function lastUI(it, w, dId, m){
   const used = num(m.kg);
   const btn = used==null ? `<button class="use" data-use="${fmtKg(S.kg)}" data-id="${it.id}" data-n="${esc(it.n)}">Use ${fmtKg(S.kg)} kg</button>` : "";
   return `<div class="last"><div><b>Today: ${fmtKg(S.kg)} kg</b> ${btn}</div><div class="lt">${esc(lastTxt)}</div></div>`;
+}
+// Last set to failure. Free-weight and balance-heavy lifts go to "form failure" (stop when form breaks)
+// to protect weak ankles and the lower back. No failure in deload, Christmas or the final week.
+function failLabel(it, w){
+  if(!it.kg || it.rx || !it.s) return "";
+  const ph = phaseOf(w);
+  if(ph==="deload" || ph==="xmas" || (ph==="peak" && w===TOTAL)) return "";
+  const n = it.n.toLowerCase();
+  if(/woodchop|pallof|carry|march|balance|calf|tibialis/.test(n)) return "";
+  const formOnly = /barbell|deadlift|rdl|split squat|step-up|step up|lunge|back extension|squat|swing|press|good morning/.test(n) && !/machine|leg press|hack|bench press/.test(n);
+  return formOnly ? `<div class="fail">Last set: go until your form starts to break</div>` : `<div class="fail">Last set: to failure</div>`;
 }
 function partialUI(it, w, m){
   const n = setsFor(it, w);

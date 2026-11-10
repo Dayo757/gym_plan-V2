@@ -356,12 +356,22 @@ const DAYS = [
  {id:"thu",tab:"Thu",title:"Cardio day",sub:"Steady pace: you can talk in short sentences. No sprints, Friday is a leg day.",groups:[
   {label:"Cardio",items:[{id:"c1",n:"Stair climber, incline walk or cross-trainer",rx:"30–45 min",note:"Steady, moderate effort. Swap machines halfway if it gets boring",q:"stairmaster workout beginner"}]}
  ]},
- {id:"fri",tab:"Fri",title:"Lower B: glute volume",sub:"Work-from-home day: longer session, about 80 min. Go at lunch or mid-afternoon when the gym is quieter.",groups:[
-  {label:"At home before the gym · ~10 min",items:[
-   {id:"h1",n:"Single-leg balance",rx:"2 × 30 sec each",keep:1,note:"Barefoot. Eyes closed if it's easy",q:"single leg balance barefoot ankle"},
-   {id:"h2",n:"Calf raises on the stairs",rx:"2 × 15 each leg",keep:1,note:"Slow lower, hold the banister",q:"single leg calf raise on step"},
-   {id:"h3",n:"Glute bridge",rx:"2 × 20",keep:1,note:"Squeeze 2 sec at the top",q:"glute bridge proper form"},
-   {id:"h4",n:"Dead bug",rx:"2 × 10 each side",keep:1,note:"Lower back pressed down",q:"dead bug exercise"}]},
+ {id:"fri",tab:"Fri",title:"Lower B: glute volume",sub:"Work-from-home day: about 30 min yoga at home in the morning, then the gym later (about 70 min).",groups:[
+  {label:"Morning yoga at home · ~30 min",items:[
+   {id:"fy1",n:"Child's pose",rx:"1 min",keep:1,note:"Knees wide, breathe into the back",q:"child's pose yoga"},
+   {id:"fy2",n:"Cat-cow",rx:"1 min",keep:1,note:"Slow, with the breath",q:"cat cow yoga"},
+   {id:"fy3",n:"Downward dog",rx:"1 min",keep:1,note:"Pedal the feet",q:"downward dog beginners"},
+   {id:"fy4",n:"Sun salutation A",rx:"3 rounds",keep:1,note:"Move with the breath, step back if jumping is too much",q:"sun salutation a beginners"},
+   {id:"fy5",n:"Warrior II",rx:"45 sec each side",keep:1,note:"Front knee over the ankle, arms long",q:"warrior 2 pose"},
+   {id:"fy6",n:"Tree pose",rx:"45 sec each side",keep:1,note:"Foot on the calf or thigh, not the knee. Great for weak ankles",q:"tree pose beginners"},
+   {id:"fy7",n:"Warrior III",rx:"30 sec each side",keep:1,note:"Hands on a wall or chair at first. Ankles and glutes",q:"warrior 3 pose beginners"},
+   {id:"fy8",n:"Chair pose",rx:"3 × 20 sec",keep:1,note:"Sit back, weight in the heels",q:"chair pose yoga"},
+   {id:"fy9",n:"Boat pose",rx:"3 × 20 sec",keep:1,note:"Knees bent is fine, chest lifted",q:"boat pose beginners"},
+   {id:"fy10",n:"Low lunge",rx:"45 sec each side",keep:1,note:"Back knee down, hips forward",q:"low lunge anjaneyasana"},
+   {id:"fy11",n:"Pigeon pose",rx:"1 min each side",keep:1,note:"Block under the hip if tight",q:"pigeon pose yoga beginners"},
+   {id:"fy12",n:"Bridge pose",rx:"3 × 20 sec",keep:1,note:"Squeeze the glutes",q:"bridge pose yoga"},
+   {id:"fy13",n:"Supine twist",rx:"45 sec each side",keep:1,note:"Knees to one side, look the other way",q:"supine spinal twist yoga"},
+   {id:"fy14",n:"Savasana",rx:"3 min",keep:1,note:"Lie still and breathe",q:"savasana yoga"}]},
   {label:"Warm-up · cardio",items:[{id:"wu",n:"Step machine 5 min + bike 5 min",rx:"10 min",keep:1,note:"Easy pace, building up",q:"stairmaster warm up"},{id:"act",n:"Glute activation",rx:"2 rounds",note:"10 glute bridges + 10 band walks each way + 10 ankle circles each way",q:"glute activation band walks glute bridge"}]},
   {label:"Main",items:[
    {id:"sq",n:"Smith machine or goblet squat",s:3,r:"8–12",pr:"6–8",note:"Feet slightly wide, sit back and down",q:"smith machine squat glutes",kg:1,early:{n:"Dumbbell goblet squat",r:"10–12",note:"Heavy dumbbell held at the chest, sit down between the heels. Keeps the core working",q:"dumbbell goblet squat"}},
@@ -433,11 +443,21 @@ const DAYS_B = {
   {label:"Finisher · end cardio",items:[{id:"fin",n:"Step machine, easy",rx:"10 min",keep:1,note:"Cool-down pace",q:"stairmaster proper form"}]}
  ]},
  fri:{title:"Lower B: glute volume (B)",groups:[
-  {label:"At home before the gym · ~10 min",items:[
-   {id:"h1",n:"Ankle alphabet",rx:"1 round each foot",keep:1,note:"Seated, draw the alphabet with your big toe",q:"ankle alphabet exercise"},
-   {id:"h2",n:"Glute bridge march",rx:"2 × 10 each",keep:1,note:"Hold the bridge, lift one foot at a time, hips level",q:"glute bridge march"},
-   {id:"h3",n:"Side plank",rx:"2 × 20 sec each",keep:1,note:"Hips high, straight line",q:"side plank"},
-   {id:"h4",n:"Bird dog",rx:"2 × 8 each side",keep:1,note:"Slow, hips level",q:"bird dog exercise"}]},
+  {label:"Morning yoga at home · ~30 min",items:[
+   {id:"fy1",n:"Seated breathing",rx:"1 min",keep:1,note:"Sit tall, slow breaths in and out through the nose",q:"seated breathing yoga beginners"},
+   {id:"fy2",n:"Cat-cow",rx:"1 min",keep:1,note:"Slow, with the breath",q:"cat cow yoga"},
+   {id:"fy3",n:"Half sun salutations",rx:"4 rounds",keep:1,note:"Reach up, fold, halfway lift, fold, rise",q:"half sun salutation yoga"},
+   {id:"fy4",n:"Crescent lunge",rx:"45 sec each side",keep:1,note:"Back knee lifted, arms up, hips square",q:"crescent lunge yoga"},
+   {id:"fy5",n:"Warrior I",rx:"45 sec each side",keep:1,note:"Back heel down, hips facing forward",q:"warrior 1 pose beginners"},
+   {id:"fy6",n:"Half moon",rx:"30 sec each side",keep:1,note:"Hand on a block, stack the hips. Balance and ankles",q:"half moon pose block beginners"},
+   {id:"fy7",n:"Eagle pose",rx:"30 sec each side",keep:1,note:"Wrap the legs, sit low. Ankle stability",q:"eagle pose beginners"},
+   {id:"fy8",n:"Goddess squat",rx:"3 × 20 sec",keep:1,note:"Wide stance, knees out over the toes",q:"goddess pose yoga"},
+   {id:"fy9",n:"Forearm plank",rx:"3 × 20 sec",keep:1,note:"Long line, glutes squeezed",q:"forearm plank yoga"},
+   {id:"fy10",n:"Side plank",rx:"30 sec each side",keep:1,note:"Knee down to make it easier",q:"side plank yoga"},
+   {id:"fy11",n:"Lizard pose",rx:"45 sec each side",keep:1,note:"Hands inside the front foot",q:"lizard pose yoga beginners"},
+   {id:"fy12",n:"Seated forward fold",rx:"1 min",keep:1,note:"Bend the knees as needed",q:"seated forward fold yoga"},
+   {id:"fy13",n:"Happy baby",rx:"1 min",keep:1,note:"Rock gently",q:"happy baby yoga pose"},
+   {id:"fy14",n:"Savasana",rx:"3 min",keep:1,note:"Lie still and breathe",q:"savasana yoga"}]},
   {label:"Warm-up · cardio",items:[{id:"wu",n:"1000 m row + bike 5 min",rx:"1000 m + 5 min",keep:1,note:"Steady row, easy bike",q:"rowing machine warm up"},{id:"act",n:"Glute activation",rx:"2 rounds",note:"10 glute bridges + 10 band walks each way + 10 ankle circles each way",q:"glute activation band walks glute bridge"}]},
   {label:"Main",items:[
    {id:"wl",n:"Dumbbell walking lunge",s:3,r:"10 each",pr:"8 each",note:"Long strides, slight forward lean",q:"dumbbell walking lunge glutes",kg:1},

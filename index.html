@@ -205,7 +205,7 @@ const PHASES = {
   build:{name:"Build",text:"<b>Build.</b> One extra set on the key lifts (shown). Stop 1–2 reps short of failure. Cardio at the top of each range, Wednesday circuit goes to 4 rounds, rower finisher becomes 1 min hard / 1 min easy."},
   push:{name:"Push",text:"<b>Push.</b> Heaviest weights so far on the first exercise each day. Hip thrust and squat aim for 5–8 reps. End of week 16: photos, measurements and record your best lifts."},
   build2:{name:"Block 2 build",text:"<b>Block 2.</b> Some accessories are swapped for new ones (shown) to keep progress coming. Start the new ones moderate and build up. Extra set on the key lifts stays."},
-  peak:{name:"Final weeks",text:"<b>Final two weeks.</b> Keep lifting at your current weights, no new records needed. Final week: drop one set from every exercise so she feels fresh, not sore. Keep steps and eating steady: no crash dieting or water cutting before the 16th."}
+  peak:{name:"Final weeks",text:"<b>Final two weeks.</b> Keep lifting at your current weights, no new records needed. Final week: drop one set from every exercise so you feel fresh, not sore. Keep steps and eating steady: no crash dieting or water cutting before the 16th."}
 };
 const phaseOf = w => w<=4?"found": w<=6?"build": w===7?"xmas": w<=11?"build": w===12?"deload": w<=16?"push": w===17?"deload": w<=21?"build2":"peak";
 const weekStart = w => new Date(START.getFullYear(), START.getMonth(), START.getDate() + (w-1)*7);
@@ -254,7 +254,7 @@ const DAYS = [
    {id:"sp",n:"Side plank",s:2,r:"20–30 sec each",note:"Hips high, straight line",q:"side plank"}]},
   {label:"Finisher · end cardio",items:[{id:"fin",n:"Bike, easy",rx:"10 min",keep:1,note:"Cool-down pace after the circuit",q:"stationary bike cool down"}]}
  ]},
- {id:"thu",tab:"Thu",title:"Cardio day",sub:"Steady pace: she can talk in short sentences. No sprints, Friday is a leg day.",groups:[
+ {id:"thu",tab:"Thu",title:"Cardio day",sub:"Steady pace: you can talk in short sentences. No sprints, Friday is a leg day.",groups:[
   {label:"Cardio",items:[{id:"c1",n:"Stair climber, incline walk or cross-trainer",rx:"30–45 min",note:"Steady, moderate effort. Swap machines halfway if it gets boring",q:"stairmaster workout beginner"}]}
  ]},
  {id:"fri",tab:"Fri",title:"Lower B: glute volume",sub:"Rest 2 min on the first two, 60–90 sec on the rest.",groups:[
@@ -614,11 +614,11 @@ function partialUI(it, w, m){
   const n = setsFor(it, w);
   let h = `<div class="pbox">`;
   if(n > 1){
-    h += `How many sets did she manage?<div class="pchips">`;
+    h += `How many sets did you manage?<div class="pchips">`;
     for(let i=1;i<n;i++) h += `<button data-ps="${i}" data-id="${it.id}" class="${m.ps===i?"on":""}">${i} of ${n}</button>`;
     h += `</div><input data-pt="${it.id}" placeholder="Anything else? e.g. fewer reps, lighter weight" value="${esc(m.p||"")}">`;
   } else {
-    h += `What did she manage?<input data-pt="${it.id}" placeholder="e.g. 6 min, 700 m, 2 rounds" value="${esc(m.p||"")}">`;
+    h += `What did you manage?<input data-pt="${it.id}" placeholder="e.g. 6 min, 700 m, 2 rounds" value="${esc(m.p||"")}">`;
   }
   return h + `</div>`;
 }

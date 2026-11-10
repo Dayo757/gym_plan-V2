@@ -15,7 +15,7 @@
 <style>
 :root{
   --bg:#0b0b0b;--card:#161514;--ink:#f2ecdf;--muted:#968d7f;--line:#2b2823;
-  --accent:#d4af37;--accent-soft:#262012;--gold-hi:#f1d27a;--done:#d4af37;--done-soft:#1f1a0c;--miss:#9e4a42;--miss-soft:#221614;
+  --accent:#d4af37;--accent-soft:#262012;--gold-hi:#f1d27a;--done:#d4af37;--done-soft:#1f1a0c;--green:#3fbf6f;--green-soft:#0f2418;--green-line:#2c7a4b;--miss:#9e4a42;--miss-soft:#221614;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -118,6 +118,19 @@ h1{font-size:20px;margin:4px 0 2px}
 .admin input{width:100%;font-size:16px;padding:8px;border-radius:8px;border:1px solid var(--line);background:#0f0f0f;color:var(--ink);margin:4px 0}
 .arow{display:flex;gap:6px;margin:6px 0}
 .arow button{flex:1;border:1px solid var(--line);background:#0f0f0f;color:var(--ink);border-radius:8px;padding:8px;font-size:13.5px;min-height:38px;cursor:pointer}
+.wrow.complete{background:var(--green-soft);border-color:var(--green-line)}
+.wrow .st.full{background:var(--green);color:#06140b}
+.tab.complete{background:var(--green-soft);border-color:var(--green-line);color:#bfeccf}
+.tab.complete .dot{background:var(--green)}
+.tab.complete.on{background:var(--green);border-color:var(--green);color:#06140b}
+.tab.complete.on .dot{background:#06140b}
+#day.complete .dayhead h2{color:var(--green)}
+.donebadge{display:inline-block;background:var(--green);color:#06140b;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;margin-bottom:8px}
+.celebrate{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:radial-gradient(circle at center,rgba(63,191,111,.96),rgba(20,90,50,.97));color:#fff;text-align:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .25s}
+.celebrate.show{opacity:1;pointer-events:auto}
+.celebrate b{font-size:44px;letter-spacing:-.01em;transform:scale(.8);transition:transform .4s cubic-bezier(.2,1.6,.4,1)}
+.celebrate.show b{transform:scale(1)}
+.celebrate span{font-size:16px;opacity:.9}
 </style>
 </head>
 <body>
@@ -167,6 +180,7 @@ h1{font-size:20px;margin:4px 0 2px}
  </section>
 </div>
 <div class="save" id="save">Saved</div>
+<div class="celebrate" id="celebrate"><b>Well done!</b><span id="celebSub"></span></div>
 
 <script>
 const yt = q => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q + " proper form tutorial");
@@ -346,17 +360,20 @@ function render(){
     else if(c.miss===c.tot){st="Missed";cls="miss";}
     else if(c.done+c.miss>0){st=c.done+"/"+c.tot+" done";cls="part";}
     const today = isThisWeek && d.id===todayId();
-    return `<button class="wrow ${today?"today":""}" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">${esc(d.title)}${today?" · today":""}</span><span class="st ${cls}">${st}</span></button>`;
+    return `<button class="wrow ${today?"today":""} ${cls==="full"?"complete":""}" data-go="${d.id}"><span class="dn">${d.tab}</span><span class="dt">${esc(d.title)}${today?" · today":""}</span><span class="st ${cls}">${st}</span></button>`;
   }).join("");
   if(view!=="workout"){ if(typeof stopBanner==="function") stopBanner(); return; }
 
   $("tabs").innerHTML = DAYS.map(d=>{
     const c=dayCounts(w,d), cls = c.done===c.tot?"full":(c.done+c.miss>0?"part":"");
-    return `<button class="tab ${d.id===curDay?"on":""}" data-d="${d.id}"><span class="dot ${cls}"></span>${d.tab}</button>`;
+    const comp = !d.rest && c.done===c.tot;
+    return `<button class="tab ${d.id===curDay?"on":""} ${comp?"complete":""}" data-d="${d.id}"><span class="dot ${cls}"></span>${d.tab}</button>`;
   }).join("");
 
   const d = DAYS.find(x=>x.id===curDay);
-  let h = `<div class="dayhead"><h2>${esc(d.tab)} · ${esc(d.title)}</h2><p>${esc(d.sub)}</p></div>`;
+  const dc = dayCounts(w,d), dayDone = !d.rest && dc.done===dc.tot;
+  $("day").className = dayDone ? "complete" : "";
+  let h = (dayDone ? `<div class="donebadge">Completed</div>` : "") + `<div class="dayhead"><h2>${esc(d.tab)} · ${esc(d.title)}</h2><p>${esc(d.sub)}</p></div>`;
   h += `<div class="dayact"><button data-all="d">Mark whole day done</button><button data-all="m">Missed this session</button><button data-all="x">Clear day</button></div>`;
   d.groups.forEach(g=>{
     h += `<div class="group">${esc(groupLabel(g,w))}</div>`;
@@ -394,15 +411,16 @@ document.addEventListener("click", e=>{
   else if(t.dataset.go){ curDay=t.dataset.go; view="workout"; render(); window.scrollTo(0,0); }
   else if(t.id==="goToday"){ curDay=todayId(); view="workout"; render(); window.scrollTo(0,0); }
   else if(t.id==="back"){ view="home"; render(); window.scrollTo(0,0); }
-  else if(t.dataset.mk){ setMark(t.dataset.id, t.dataset.mk); persist(); render(); }
+  else if(t.dataset.mk){ const was=isDayDone(); setMark(t.dataset.id, t.dataset.mk); persist(); render(); if(!was && isDayDone()) celebrate(); }
   else if(t.dataset.all){
+    const was=isDayDone();
     const d = DAYS.find(x=>x.id===curDay);
     dayItems(d).forEach(it=>{
       const k = key(state.week,curDay,it.id), m = state.marks[k]||{};
       if(t.dataset.all==="x"){ delete m.s; } else m.s = t.dataset.all;
       if(!m.s && !m.kg) delete state.marks[k]; else state.marks[k]=m;
     });
-    persist(); render();
+    persist(); render(); if(!was && isDayDone()) celebrate();
   }
 });
 document.addEventListener("input", e=>{
@@ -566,6 +584,22 @@ $("bkRestore").addEventListener("click", ()=>restoreFrom($("bkIn").value));
 // back up on open (catches day-one data and anything missed offline) and when the app is put away
 if(bkOn()) setTimeout(backupNow, 1500);
 document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden" && bkDirty) backupNow(); });
+
+// ---------- completed-day celebration ----------
+function isDayDone(){
+  const d = DAYS.find(x=>x.id===curDay); if(!d || d.rest) return false;
+  const c = dayCounts(state.week, d); return c.tot>0 && c.done===c.tot;
+}
+const CHEERS = ["Session smashed.","Another one in the bank.","That's how it's done.","April is getting closer.","Consistency looks good on you."];
+let celebT = null;
+function celebrate(){
+  const el = $("celebrate");
+  $("celebSub").textContent = (DAYS.find(x=>x.id===curDay).tab) + " complete. " + CHEERS[Math.floor(Math.random()*CHEERS.length)];
+  el.classList.add("show");
+  try{ navigator.vibrate && navigator.vibrate([60,40,60]); }catch(e){}
+  clearTimeout(celebT); celebT = setTimeout(()=>el.classList.remove("show"), 2200);
+}
+$("celebrate").addEventListener("click", ()=>{ clearTimeout(celebT); $("celebrate").classList.remove("show"); });
 </script>
 </body>
 </html>
